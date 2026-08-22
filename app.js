@@ -1,1364 +1,2537 @@
-/* =====================================================
-   MONITOR STOCK CUSTOMER
-   PREMIUM MOBILE STYLE
-===================================================== */
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-:root {
-    --primary: #173f7a;
-    --primary-dark: #0f2d59;
-    --secondary: #2d6cdf;
-
-    --background: #f4f7fb;
-    --card: #ffffff;
-
-    --text: #172033;
-    --text-light: #6b7280;
-
-    --border: #e5e9f0;
-
-    --success: #16a34a;
-    --warning: #f59e0b;
-    --danger: #dc2626;
-
-    --shadow:
-        0 8px 25px rgba(15, 45, 89, 0.08);
-}
+/* =========================================================
+   MONITORING STOCK CUSTOMER
+   FINAL APP.JS
+   =========================================================
+   FITUR:
+   - Search Customer
+   - Pilih Customer
+   - Monitoring Stock
+   - Status Stock
+   - Simpan LocalStorage
+   - Riwayat Monitoring
+   - Dashboard
+   - Export Excel
+   - Detail Monitoring
+   - Summary Customer
+   - Summary per Kota
+   ========================================================= */
 
 
-/* =====================================================
-   BODY
-===================================================== */
+/* =========================================================
+   GLOBAL
+   ========================================================= */
 
-body {
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Arial,
-        sans-serif;
+let selectedCustomer = null;
 
-    background: var(--background);
+const STORAGE_KEY = "stockData";
 
-    color: var(--text);
 
-    min-height: 100vh;
+/* =========================================================
+   HELPER ELEMENT
+   ========================================================= */
 
-    padding-bottom: 90px;
+function el(id) {
+    return document.getElementById(id);
 }
 
 
-/* =====================================================
-   HEADER
-===================================================== */
+/* =========================================================
+   ELEMENT
+   ========================================================= */
 
-.app-header {
-    background:
-        linear-gradient(
-            135deg,
-            var(--primary-dark),
-            var(--primary),
-            var(--secondary)
+const customerSearch = el("customerSearch");
+const customerList = el("customerList");
+
+const selectedCustomerBox = el("selectedCustomer");
+const selectedCustomerName = el("selectedCustomerName");
+const selectedCustomerCode = el("selectedCustomerCode");
+const selectedCustomerAddress = el("selectedCustomerAddress");
+const selectedCustomerCity = el("selectedCustomerCity");
+
+const product = el("product");
+const stock = el("stock");
+const stockMinimum = el("stockMinimum");
+const stockStatus = el("stockStatus");
+const note = el("note");
+const visitDate = el("visitDate");
+
+const historyList = el("historyList");
+
+
+/* =========================================================
+   AMBIL DATA CUSTOMER
+   ========================================================= */
+
+function getCustomers() {
+
+    if (
+        typeof customers !== "undefined" &&
+        Array.isArray(customers)
+    ) {
+        return customers;
+    }
+
+    return [];
+}
+
+
+/* =========================================================
+   AMBIL DATA MONITORING
+   ========================================================= */
+
+function getStockData() {
+
+    try {
+
+        const data =
+            JSON.parse(
+                localStorage.getItem(STORAGE_KEY) || "[]"
+            );
+
+        return Array.isArray(data) ? data : [];
+
+    } catch (error) {
+
+        console.error(
+            "Gagal membaca data monitoring:",
+            error
         );
 
-    color: white;
+        return [];
 
-    padding:
-        24px
-        20px
-        28px;
+    }
 
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    border-radius:
-        0
-        0
-        24px
-        24px;
-
-    box-shadow:
-        0 8px 25px rgba(23, 63, 122, 0.22);
-}
-
-.app-header h1 {
-    font-size: 24px;
-
-    font-weight: 700;
-
-    letter-spacing: -0.5px;
-}
-
-.app-header p {
-    margin-top: 5px;
-
-    font-size: 13px;
-
-    opacity: 0.82;
-}
-
-.header-icon {
-    width: 48px;
-
-    height: 48px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    background:
-        rgba(255,255,255,0.15);
-
-    border:
-        1px solid
-        rgba(255,255,255,0.2);
-
-    border-radius: 15px;
-
-    font-size: 23px;
-
-    backdrop-filter:
-        blur(10px);
 }
 
 
-/* =====================================================
+/* =========================================================
+   SIMPAN DATA MONITORING
+   ========================================================= */
+
+function setStockData(data) {
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(data)
+    );
+
+}
+
+
+/* =========================================================
+   TANGGAL HARI INI
+   ========================================================= */
+
+function setToday() {
+
+    if (!visitDate) return;
+
+    const today = new Date();
+
+    const year =
+        today.getFullYear();
+
+    const month =
+        String(
+            today.getMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            today.getDate()
+        ).padStart(2, "0");
+
+    visitDate.value =
+        `${year}-${month}-${day}`;
+
+}
+
+
+/* =========================================================
+   SEARCH CUSTOMER
+   ========================================================= */
+
+if (customerSearch) {
+
+    customerSearch.addEventListener(
+        "input",
+        function () {
+
+            const keyword =
+                this.value
+                    .toLowerCase()
+                    .trim();
+
+            if (!keyword) {
+
+                customerList.innerHTML = "";
+
+                customerList.classList.remove(
+                    "show"
+                );
+
+                return;
+            }
+
+
+            const customerData =
+                getCustomers();
+
+
+            const results =
+                customerData
+                    .filter(customer => {
+
+                        const kode =
+                            String(
+                                customer.kode || ""
+                            ).toLowerCase();
+
+                        const nama =
+                            String(
+                                customer.nama || ""
+                            ).toLowerCase();
+
+                        const kota =
+                            String(
+                                customer.kota || ""
+                            ).toLowerCase();
+
+                        return (
+                            kode.includes(keyword) ||
+                            nama.includes(keyword) ||
+                            kota.includes(keyword)
+                        );
+
+                    })
+                    .slice(0, 30);
+
+
+            customerList.innerHTML = "";
+
+
+            if (results.length === 0) {
+
+                customerList.innerHTML = `
+
+                    <div class="customer-item">
+
+                        <strong>
+                            Customer tidak ditemukan
+                        </strong>
+
+                        <small>
+                            Coba cari berdasarkan nama,
+                            kode outlet atau kota
+                        </small>
+
+                    </div>
+
+                `;
+
+                customerList.classList.add(
+                    "show"
+                );
+
+                return;
+            }
+
+
+            results.forEach(customer => {
+
+                const item =
+                    document.createElement("div");
+
+
+                item.className =
+                    "customer-item";
+
+
+                item.innerHTML = `
+
+                    <strong>
+                        ${escapeHTML(customer.nama)}
+                    </strong>
+
+                    <span>
+                        ${escapeHTML(customer.kode)}
+                    </span>
+
+                    <small>
+                        ${escapeHTML(customer.kota)}
+                    </small>
+
+                `;
+
+
+                item.addEventListener(
+                    "click",
+                    function () {
+
+                        selectCustomer(customer);
+
+                    }
+                );
+
+
+                customerList.appendChild(item);
+
+            });
+
+
+            customerList.classList.add(
+                "show"
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   SELECT CUSTOMER
+   ========================================================= */
+
+function selectCustomer(customer) {
+
+    selectedCustomer =
+        customer;
+
+
+    if (selectedCustomerName) {
+
+        selectedCustomerName.textContent =
+            customer.nama || "-";
+
+    }
+
+
+    if (selectedCustomerCode) {
+
+        selectedCustomerCode.textContent =
+            customer.kode || "-";
+
+    }
+
+
+    if (selectedCustomerAddress) {
+
+        selectedCustomerAddress.textContent =
+            customer.alamat || "-";
+
+    }
+
+
+    if (selectedCustomerCity) {
+
+        selectedCustomerCity.textContent =
+            `${customer.kota || "-"}, ${customer.provinsi || "-"}`;
+
+    }
+
+
+    if (selectedCustomerBox) {
+
+        selectedCustomerBox.classList.remove(
+            "hidden"
+        );
+
+    }
+
+
+    if (customerSearch) {
+
+        customerSearch.value =
+            customer.nama || "";
+
+    }
+
+
+    if (customerList) {
+
+        customerList.innerHTML = "";
+
+        customerList.classList.remove(
+            "show"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   CLEAR CUSTOMER
+   ========================================================= */
+
+function clearCustomer() {
+
+    selectedCustomer =
+        null;
+
+
+    if (customerSearch) {
+
+        customerSearch.value =
+            "";
+
+        customerSearch.focus();
+
+    }
+
+
+    if (selectedCustomerBox) {
+
+        selectedCustomerBox.classList.add(
+            "hidden"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   STATUS STOCK
+   ========================================================= */
+
+function getStockStatus(
+    stockValue,
+    minimumValue
+) {
+
+    stockValue =
+        Number(stockValue || 0);
+
+    minimumValue =
+        Number(minimumValue || 0);
+
+
+    if (stockValue === 0) {
+
+        return "STOCK KOSONG";
+
+    }
+
+
+    if (stockValue <= minimumValue) {
+
+        return "STOCK MENIPIS";
+
+    }
+
+
+    return "STOCK AMAN";
+
+}
+
+
+/* =========================================================
+   UPDATE STATUS STOCK
+   ========================================================= */
+
+function updateStockStatus() {
+
+    if (!stockStatus) return;
+
+
+    const stockValue =
+        Number(
+            stock ? stock.value : 0
+        );
+
+
+    const minimumValue =
+        Number(
+            stockMinimum ?
+            stockMinimum.value :
+            0
+        );
+
+
+    stockStatus.className =
+        "stock-status";
+
+
+    if (
+        !stock ||
+        stock.value === ""
+    ) {
+
+        stockStatus.innerHTML = `
+
+            <div class="status-icon">
+                📦
+            </div>
+
+            <div>
+
+                <small>
+                    Status Stock
+                </small>
+
+                <strong>
+                    Belum Diisi
+                </strong>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    const status =
+        getStockStatus(
+            stockValue,
+            minimumValue
+        );
+
+
+    if (status === "STOCK KOSONG") {
+
+        stockStatus.classList.add(
+            "status-danger"
+        );
+
+
+        stockStatus.innerHTML = `
+
+            <div class="status-icon">
+                🔴
+            </div>
+
+            <div>
+
+                <small>
+                    Status Stock
+                </small>
+
+                <strong>
+                    STOCK KOSONG
+                </strong>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    if (status === "STOCK MENIPIS") {
+
+        stockStatus.classList.add(
+            "status-warning"
+        );
+
+
+        stockStatus.innerHTML = `
+
+            <div class="status-icon">
+                🟡
+            </div>
+
+            <div>
+
+                <small>
+                    Status Stock
+                </small>
+
+                <strong>
+                    STOCK MENIPIS
+                </strong>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    stockStatus.classList.add(
+        "status-safe"
+    );
+
+
+    stockStatus.innerHTML = `
+
+        <div class="status-icon">
+            🟢
+        </div>
+
+        <div>
+
+            <small>
+                Status Stock
+            </small>
+
+            <strong>
+                STOCK AMAN
+            </strong>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   EVENT STOCK
+   ========================================================= */
+
+if (stock) {
+
+    stock.addEventListener(
+        "input",
+        updateStockStatus
+    );
+
+}
+
+
+if (stockMinimum) {
+
+    stockMinimum.addEventListener(
+        "input",
+        updateStockStatus
+    );
+
+}
+
+
+/* =========================================================
+   SAVE STOCK
+   ========================================================= */
+
+function saveStock() {
+
+    /* CUSTOMER */
+
+    if (!selectedCustomer) {
+
+        alert(
+            "Silakan pilih customer terlebih dahulu."
+        );
+
+        if (customerSearch) {
+
+            customerSearch.focus();
+
+        }
+
+        return;
+
+    }
+
+
+    /* PRODUK */
+
+    if (
+        !product ||
+        !product.value
+    ) {
+
+        alert(
+            "Silakan pilih produk."
+        );
+
+        if (product) {
+
+            product.focus();
+
+        }
+
+        return;
+
+    }
+
+
+    /* STOCK */
+
+    if (
+        !stock ||
+        stock.value === ""
+    ) {
+
+        alert(
+            "Silakan isi jumlah stock."
+        );
+
+        if (stock) {
+
+            stock.focus();
+
+        }
+
+        return;
+
+    }
+
+
+    const stockValue =
+        Number(stock.value);
+
+
+    const minimumValue =
+        Number(
+            stockMinimum ?
+            stockMinimum.value :
+            0
+        );
+
+
+    if (stockValue < 0) {
+
+        alert(
+            "Jumlah stock tidak boleh negatif."
+        );
+
+        stock.focus();
+
+        return;
+
+    }
+
+
+    const status =
+        getStockStatus(
+            stockValue,
+            minimumValue
+        );
+
+
+    /* DATA */
+
+    const record = {
+
+        id:
+            Date.now(),
+
+        tanggal:
+            visitDate ?
+            visitDate.value :
+            "",
+
+        kode:
+            selectedCustomer.kode || "",
+
+        customer:
+            selectedCustomer.nama || "",
+
+        alamat:
+            selectedCustomer.alamat || "",
+
+        kota:
+            selectedCustomer.kota || "",
+
+        provinsi:
+            selectedCustomer.provinsi || "",
+
+        produk:
+            product.value,
+
+        stock:
+            stockValue,
+
+        minimum:
+            minimumValue,
+
+        status:
+            status,
+
+        catatan:
+            note ?
+            note.value.trim() :
+            ""
+
+    };
+
+
+    /* DATA LAMA */
+
+    const data =
+        getStockData();
+
+
+    /* DATA BARU DI DEPAN */
+
+    data.unshift(record);
+
+
+    /* SIMPAN */
+
+    setStockData(data);
+
+
+    alert(
+        "Monitoring stock berhasil disimpan."
+    );
+
+
+    resetForm();
+
+    loadHistory();
+
+    updateDashboard();
+
+}
+
+
+/* =========================================================
+   RESET FORM
+   ========================================================= */
+
+function resetForm() {
+
+    selectedCustomer =
+        null;
+
+
+    if (customerSearch) {
+
+        customerSearch.value =
+            "";
+
+    }
+
+
+    if (selectedCustomerBox) {
+
+        selectedCustomerBox.classList.add(
+            "hidden"
+        );
+
+    }
+
+
+    if (product) {
+
+        product.value =
+            "";
+
+    }
+
+
+    if (stock) {
+
+        stock.value =
+            "";
+
+    }
+
+
+    if (stockMinimum) {
+
+        stockMinimum.value =
+            "5";
+
+    }
+
+
+    if (note) {
+
+        note.value =
+            "";
+
+    }
+
+
+    setToday();
+
+    updateStockStatus();
+
+}
+
+
+/* =========================================================
+   LOAD HISTORY
+   ========================================================= */
+
+function loadHistory() {
+
+    if (!historyList) return;
+
+
+    const data =
+        getStockData();
+
+
+    historyList.innerHTML =
+        "";
+
+
+    if (data.length === 0) {
+
+        historyList.innerHTML = `
+
+            <div class="empty-history">
+
+                <div>
+                    📋
+                </div>
+
+                <p>
+                    Belum ada data monitoring
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    data.forEach(record => {
+
+        const card =
+            document.createElement("div");
+
+
+        card.className =
+            "history-card";
+
+
+        let badgeClass =
+            "safe";
+
+
+        let badgeIcon =
+            "🟢";
+
+
+        if (
+            record.status ===
+            "STOCK MENIPIS"
+        ) {
+
+            badgeClass =
+                "warning";
+
+            badgeIcon =
+                "🟡";
+
+        }
+
+
+        if (
+            record.status ===
+            "STOCK KOSONG"
+        ) {
+
+            badgeClass =
+                "danger";
+
+            badgeIcon =
+                "🔴";
+
+        }
+
+
+        card.innerHTML = `
+
+            <div class="history-top">
+
+                <div class="history-customer">
+
+                    <strong>
+                        ${escapeHTML(record.customer)}
+                    </strong>
+
+                    <span>
+                        ${escapeHTML(record.kode)}
+                    </span>
+
+                </div>
+
+                <div class="history-date">
+
+                    ${formatDate(record.tanggal)}
+
+                </div>
+
+            </div>
+
+
+            <div class="history-details">
+
+                <div class="history-box">
+
+                    <small>
+                        Produk
+                    </small>
+
+                    <strong>
+                        ${escapeHTML(record.produk)}
+                    </strong>
+
+                </div>
+
+
+                <div class="history-box">
+
+                    <small>
+                        Stock
+                    </small>
+
+                    <strong>
+                        ${record.stock} Karton
+                    </strong>
+
+                </div>
+
+
+                <div class="history-box">
+
+                    <small>
+                        Minimum
+                    </small>
+
+                    <strong>
+                        ${record.minimum} Karton
+                    </strong>
+
+                </div>
+
+
+                <div class="history-box">
+
+                    <small>
+                        Status
+                    </small>
+
+                    <span class="status-badge ${badgeClass}">
+
+                        ${badgeIcon}
+
+                        ${escapeHTML(record.status)}
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            ${
+                record.catatan
+                ?
+                `
+
+                <div class="history-note">
+
+                    📝
+                    ${escapeHTML(record.catatan)}
+
+                </div>
+
+                `
+                :
+                ""
+            }
+
+        `;
+
+
+        historyList.appendChild(card);
+
+    });
+
+}
+
+
+/* =========================================================
    DASHBOARD
-===================================================== */
+   ========================================================= */
 
-.dashboard {
-    display: grid;
+function updateDashboard() {
 
-    grid-template-columns:
-        repeat(2, 1fr);
-
-    gap: 12px;
-
-    padding:
-        18px
-        16px
-        4px;
-}
-
-.dashboard-card {
-    background: var(--card);
-
-    border-radius: 17px;
-
-    padding: 15px 13px;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 11px;
-
-    box-shadow: var(--shadow);
-
-    border:
-        1px solid
-        rgba(229,233,240,0.7);
-}
-
-.dashboard-icon {
-    width: 40px;
-
-    height: 40px;
-
-    flex-shrink: 0;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border-radius: 12px;
-
-    background:
-        #eef4ff;
-
-    font-size: 18px;
-}
-
-.dashboard-card small {
-    display: block;
-
-    color:
-        var(--text-light);
-
-    font-size: 11px;
-
-    margin-bottom: 4px;
-}
-
-.dashboard-card strong {
-    display: block;
-
-    font-size: 20px;
-
-    font-weight: 700;
-
-    color: var(--text);
-}
+    const data =
+        getStockData();
 
 
-/* =====================================================
-   CONTAINER
-===================================================== */
+    const customerData =
+        getCustomers();
 
-.container {
-    width: 100%;
 
-    max-width: 680px;
+    /* TOTAL CUSTOMER */
 
-    margin:
-        0
-        auto;
+    const totalCustomer =
+        el("totalCustomer");
 
-    padding:
-        18px
-        16px
-        25px;
+
+    if (totalCustomer) {
+
+        totalCustomer.textContent =
+            customerData.length;
+
+    }
+
+
+    /* TOTAL MONITOR */
+
+    const totalMonitor =
+        el("totalMonitor");
+
+
+    if (totalMonitor) {
+
+        totalMonitor.textContent =
+            data.length;
+
+    }
+
+
+    /* MENIPIS */
+
+    const stockMenipis =
+        el("stockMenipis");
+
+
+    const menipis =
+        data.filter(
+            item =>
+                item.status ===
+                "STOCK MENIPIS"
+        ).length;
+
+
+    if (stockMenipis) {
+
+        stockMenipis.textContent =
+            menipis;
+
+    }
+
+
+    /* KOSONG */
+
+    const stockKosong =
+        el("stockKosong");
+
+
+    const kosong =
+        data.filter(
+            item =>
+                item.status ===
+                "STOCK KOSONG"
+        ).length;
+
+
+    if (stockKosong) {
+
+        stockKosong.textContent =
+            kosong;
+
+    }
+
 }
 
 
-/* =====================================================
-   SECTION TITLE
-===================================================== */
+/* =========================================================
+   FORMAT DATE
+   ========================================================= */
 
-.section-title {
-    margin-bottom: 17px;
-}
+function formatDate(dateString) {
 
-.section-title h2 {
-    font-size: 18px;
+    if (!dateString) {
 
-    font-weight: 700;
+        return "-";
 
-    color:
-        var(--text);
-}
-
-.section-title p {
-    font-size: 12px;
-
-    color:
-        var(--text-light);
-
-    margin-top: 4px;
-}
+    }
 
 
-/* =====================================================
-   FORM
-===================================================== */
+    const parts =
+        String(dateString).split("-");
 
-.form-group {
-    margin-bottom: 17px;
-}
 
-.form-group label {
-    display: block;
+    if (parts.length !== 3) {
 
-    font-size: 13px;
+        return dateString;
 
-    font-weight: 600;
+    }
 
-    margin-bottom: 8px;
 
-    color:
-        #30394a;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+
 }
 
 
-/* INPUT / SELECT / TEXTAREA */
+/* =========================================================
+   ESCAPE HTML
+   ========================================================= */
 
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
+function escapeHTML(value) {
 
-    border:
-        1px solid
-        var(--border);
+    if (
+        value === null ||
+        value === undefined
+    ) {
 
-    background: white;
+        return "";
 
-    border-radius: 13px;
-
-    padding:
-        13px
-        14px;
-
-    font-family: inherit;
-
-    font-size: 14px;
-
-    color:
-        var(--text);
-
-    outline: none;
-
-    transition:
-        0.2s ease;
-
-    box-shadow:
-        0 2px 7px
-        rgba(0,0,0,0.025);
-}
-
-.form-group textarea {
-    resize: vertical;
-
-    min-height: 85px;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    border-color:
-        var(--secondary);
-
-    box-shadow:
-        0 0 0 3px
-        rgba(45,108,223,0.10);
-}
+    }
 
 
-/* =====================================================
-   CUSTOMER SEARCH
-===================================================== */
+    return String(value)
 
-.customer-list {
-    margin-top: 7px;
+        .replace(
+            /&/g,
+            "&amp;"
+        )
 
-    background: white;
+        .replace(
+            /</g,
+            "&lt;"
+        )
 
-    border-radius: 14px;
+        .replace(
+            />/g,
+            "&gt;"
+        )
 
-    overflow: hidden;
+        .replace(
+            /"/g,
+            "&quot;"
+        )
 
-    box-shadow:
-        0 10px 30px
-        rgba(0,0,0,0.10);
-
-    border:
-        1px solid
-        var(--border);
-
-    display: none;
-
-    max-height: 260px;
-
-    overflow-y: auto;
-
-    position: relative;
-
-    z-index: 10;
-}
-
-.customer-list.show {
-    display: block;
-}
-
-.customer-item {
-    padding:
-        12px
-        14px;
-
-    border-bottom:
-        1px solid
-        #eef0f4;
-
-    cursor: pointer;
-
-    transition:
-        background
-        0.15s ease;
-}
-
-.customer-item:last-child {
-    border-bottom: none;
-}
-
-.customer-item:hover {
-    background:
-        #f4f7fb;
-}
-
-.customer-item strong {
-    display: block;
-
-    font-size: 14px;
-
-    color:
-        var(--text);
-}
-
-.customer-item span {
-    display: block;
-
-    font-size: 11px;
-
-    color:
-        var(--primary);
-
-    margin-top: 2px;
-}
-
-.customer-item small {
-    display: block;
-
-    font-size: 11px;
-
-    color:
-        var(--text-light);
-
-    margin-top: 3px;
-
-    white-space: nowrap;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-}
-
-
-/* =====================================================
-   SELECTED CUSTOMER
-===================================================== */
-
-.selected-customer {
-    background:
-        linear-gradient(
-            135deg,
-            #eef5ff,
-            #f8fbff
+        .replace(
+            /'/g,
+            "&#039;"
         );
 
-    border:
-        1px solid
-        #dce8fb;
-
-    border-radius: 16px;
-
-    padding: 13px;
-
-    margin-bottom: 17px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 10px;
-}
-
-.selected-customer.hidden {
-    display: none;
-}
-
-.customer-info {
-    display: flex;
-
-    align-items: center;
-
-    gap: 11px;
-
-    min-width: 0;
-}
-
-.customer-avatar {
-    width: 43px;
-
-    height: 43px;
-
-    flex-shrink: 0;
-
-    border-radius: 13px;
-
-    background:
-        var(--primary);
-
-    color: white;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    font-size: 19px;
-}
-
-.customer-info strong {
-    display: block;
-
-    font-size: 14px;
-
-    white-space: nowrap;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    max-width: 210px;
-}
-
-.customer-info span {
-    display: block;
-
-    font-size: 11px;
-
-    color:
-        var(--primary);
-
-    margin-top: 2px;
-}
-
-.customer-info small {
-    display: block;
-
-    font-size: 10px;
-
-    color:
-        var(--text-light);
-
-    margin-top: 2px;
-
-    max-width: 250px;
-
-    white-space: nowrap;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-}
-
-.btn-change {
-    border: none;
-
-    background:
-        white;
-
-    color:
-        var(--primary);
-
-    font-size: 12px;
-
-    font-weight: 600;
-
-    padding:
-        8px
-        11px;
-
-    border-radius: 9px;
-
-    cursor: pointer;
-
-    border:
-        1px solid
-        #d9e4f7;
 }
 
 
-/* =====================================================
-   FORM ROW
-===================================================== */
+/* =========================================================
+   HOME
+   ========================================================= */
 
-.form-row {
-    display: grid;
+function showHome() {
 
-    grid-template-columns:
-        1fr 1fr;
+    window.scrollTo({
 
-    gap: 12px;
-}
+        top: 0,
 
-.input-unit {
-    position: relative;
-}
+        behavior: "smooth"
 
-.input-unit input {
-    padding-right: 65px;
-}
+    });
 
-.input-unit span {
-    position: absolute;
 
-    right: 13px;
+    setActiveNav(0);
 
-    top: 50%;
-
-    transform:
-        translateY(-50%);
-
-    font-size: 11px;
-
-    color:
-        var(--text-light);
-
-    pointer-events: none;
 }
 
 
-/* =====================================================
-   STOCK STATUS
-===================================================== */
-
-.stock-status {
-    border-radius: 16px;
-
-    padding: 14px;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 12px;
-
-    margin-bottom: 17px;
-
-    background:
-        #f5f7fa;
-
-    border:
-        1px solid
-        #e5e9f0;
-}
-
-.stock-status .status-icon {
-    width: 43px;
-
-    height: 43px;
-
-    border-radius: 13px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    background:
-        #e9edf3;
-
-    font-size: 19px;
-}
-
-.stock-status small {
-    display: block;
-
-    color:
-        var(--text-light);
-
-    font-size: 11px;
-
-    margin-bottom: 3px;
-}
-
-.stock-status strong {
-    display: block;
-
-    font-size: 14px;
-}
-
-
-/* STATUS AMAN */
-
-.stock-status.status-safe {
-    background:
-        #ecfdf3;
-
-    border-color:
-        #bbf7d0;
-}
-
-.stock-status.status-safe .status-icon {
-    background:
-        #dcfce7;
-}
-
-.stock-status.status-safe strong {
-    color:
-        var(--success);
-}
-
-
-/* STATUS MENIPIS */
-
-.stock-status.status-warning {
-    background:
-        #fffbeb;
-
-    border-color:
-        #fde68a;
-}
-
-.stock-status.status-warning .status-icon {
-    background:
-        #fef3c7;
-}
-
-.stock-status.status-warning strong {
-    color:
-        var(--warning);
-}
-
-
-/* STATUS KOSONG */
-
-.stock-status.status-danger {
-    background:
-        #fef2f2;
-
-    border-color:
-        #fecaca;
-}
-
-.stock-status.status-danger .status-icon {
-    background:
-        #fee2e2;
-}
-
-.stock-status.status-danger strong {
-    color:
-        var(--danger);
-}
-
-
-/* =====================================================
-   SAVE BUTTON
-===================================================== */
-
-.btn-save {
-    width: 100%;
-
-    border: none;
-
-    background:
-        linear-gradient(
-            135deg,
-            var(--primary),
-            var(--secondary)
-        );
-
-    color: white;
-
-    font-family: inherit;
-
-    font-size: 14px;
-
-    font-weight: 700;
-
-    padding:
-        15px;
-
-    border-radius: 14px;
-
-    cursor: pointer;
-
-    box-shadow:
-        0 8px 18px
-        rgba(45,108,223,0.22);
-
-    transition:
-        0.2s ease;
-}
-
-.btn-save:hover {
-    transform:
-        translateY(-1px);
-
-    box-shadow:
-        0 10px 22px
-        rgba(45,108,223,0.28);
-}
-
-.btn-save:active {
-    transform:
-        scale(0.98);
-}
-
-
-/* =====================================================
+/* =========================================================
    HISTORY
-===================================================== */
+   ========================================================= */
 
-.history-section {
-    margin-top: 32px;
-}
+function showHistory() {
 
-.history-list {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 10px;
-}
-
-.empty-history {
-    background: white;
-
-    border:
-        1px dashed
-        #d9dee8;
-
-    border-radius: 16px;
-
-    padding: 30px 15px;
-
-    text-align: center;
-
-    color:
-        var(--text-light);
-
-    font-size: 22px;
-}
-
-.empty-history p {
-    font-size: 12px;
-
-    margin-top: 8px;
-}
-
-
-/* =====================================================
-   HISTORY CARD
-===================================================== */
-
-.history-card {
-    background: white;
-
-    border-radius: 16px;
-
-    padding: 14px;
-
-    border:
-        1px solid
-        var(--border);
-
-    box-shadow:
-        0 5px 18px
-        rgba(0,0,0,0.04);
-}
-
-.history-top {
-    display: flex;
-
-    align-items: flex-start;
-
-    justify-content: space-between;
-
-    gap: 10px;
-}
-
-.history-customer {
-    min-width: 0;
-}
-
-.history-customer strong {
-    display: block;
-
-    font-size: 14px;
-
-    white-space: nowrap;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-}
-
-.history-customer span {
-    display: block;
-
-    color:
-        var(--primary);
-
-    font-size: 11px;
-
-    margin-top: 3px;
-}
-
-.history-date {
-    font-size: 10px;
-
-    color:
-        var(--text-light);
-
-    white-space: nowrap;
-}
-
-.history-details {
-    display: grid;
-
-    grid-template-columns:
-        repeat(2, 1fr);
-
-    gap: 8px;
-
-    margin-top: 12px;
-}
-
-.history-box {
-    background:
-        #f7f9fc;
-
-    border-radius: 10px;
-
-    padding: 9px;
-}
-
-.history-box small {
-    display: block;
-
-    color:
-        var(--text-light);
-
-    font-size: 10px;
-}
-
-.history-box strong {
-    display: block;
-
-    font-size: 13px;
-
-    margin-top: 3px;
-}
-
-.history-note {
-    margin-top: 9px;
-
-    padding-top: 9px;
-
-    border-top:
-        1px solid
-        #eef0f4;
-
-    font-size: 11px;
-
-    color:
-        var(--text-light);
-}
-
-
-/* =====================================================
-   HISTORY STATUS
-===================================================== */
-
-.status-badge {
-    display: inline-flex;
-
-    align-items: center;
-
-    gap: 4px;
-
-    padding:
-        5px
-        8px;
-
-    border-radius: 20px;
-
-    font-size: 10px;
-
-    font-weight: 700;
-}
-
-.status-badge.safe {
-    background:
-        #dcfce7;
-
-    color:
-        #15803d;
-}
-
-.status-badge.warning {
-    background:
-        #fef3c7;
-
-    color:
-        #b45309;
-}
-
-.status-badge.danger {
-    background:
-        #fee2e2;
-
-    color:
-        #b91c1c;
-}
-
-
-/* =====================================================
-   BOTTOM NAVIGATION
-===================================================== */
-
-.bottom-nav {
-    position: fixed;
-
-    left: 0;
-
-    right: 0;
-
-    bottom: 0;
-
-    height: 70px;
-
-    background:
-        rgba(255,255,255,0.96);
-
-    backdrop-filter:
-        blur(15px);
-
-    border-top:
-        1px solid
-        #e7eaf0;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-around;
-
-    z-index: 100;
-
-    box-shadow:
-        0 -5px 20px
-        rgba(0,0,0,0.05);
-}
-
-.nav-item {
-    border: none;
-
-    background: transparent;
-
-    color:
-        #8b93a1;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-
-    justify-content: center;
-
-    gap: 3px;
-
-    min-width: 70px;
-
-    height: 58px;
-
-    cursor: pointer;
-
-    font-family: inherit;
-}
-
-.nav-item span {
-    font-size: 19px;
-}
-
-.nav-item small {
-    font-size: 10px;
-
-    font-weight: 600;
-}
-
-.nav-item.active {
-    color:
-        var(--primary);
-}
-
-
-/* =====================================================
-   RESPONSIVE
-===================================================== */
-
-@media (min-width: 700px) {
-
-    body {
-        padding-bottom: 30px;
-    }
-
-    .app-header {
-        max-width: 680px;
-
-        margin: 0 auto;
-
-        border-radius:
-            0
-            0
-            24px
-            24px;
-    }
-
-    .dashboard {
-        max-width: 680px;
-
-        margin: 0 auto;
-
-        grid-template-columns:
-            repeat(4, 1fr);
-    }
-
-    .bottom-nav {
-        display: none;
-    }
-}
-
-
-@media (max-width: 390px) {
-
-    .app-header {
-        padding:
-            20px
-            16px
-            24px;
-    }
-
-    .app-header h1 {
-        font-size: 21px;
-    }
-
-    .dashboard {
-        gap: 8px;
-
-        padding-left: 12px;
-
-        padding-right: 12px;
-    }
-
-    .dashboard-card {
-        padding: 12px 10px;
-
-        gap: 8px;
-    }
-
-    .dashboard-icon {
-        width: 35px;
-
-        height: 35px;
-    }
-
-    .dashboard-card strong {
-        font-size: 18px;
-    }
-
-    .container {
-        padding:
-            16px
-            12px
-            25px;
-    }
-
-    .form-row {
-        grid-template-columns:
-            1fr;
-    }
-}
-
-
-/* =====================================================
-   SCROLLBAR
-===================================================== */
-
-::-webkit-scrollbar {
-    width: 5px;
-
-    height: 5px;
-}
-
-::-webkit-scrollbar-track {
-    background:
-        transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background:
-        #cbd2dc;
-
-    border-radius: 10px;
-}
-
-
-/* =====================================================
-   DISABLE TEXT SELECTION ON BUTTONS
-===================================================== */
-
-button {
-    -webkit-tap-highlight-color:
-        transparent;
-}
-
-
-/* =====================================================
-   INPUT NUMBER
-===================================================== */
-
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-    opacity: 0.5;
-}
-
-
-/* =====================================================
-   HIDDEN
-===================================================== */
-
-.hidden {
-    display: none !important;
-}
-
-/* =====================================================
-   LOGIN SCREEN
-===================================================== */
-
-.login-screen {
-    min-height: 100vh;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    padding: 24px;
-
-    background:
-        linear-gradient(
-            135deg,
-            var(--primary-dark),
-            var(--primary),
-            var(--secondary)
+    const history =
+        document.querySelector(
+            ".history-section"
         );
-}
 
-.login-box {
-    width: 100%;
 
-    max-width: 380px;
+    if (history) {
 
-    background: var(--card);
+        history.scrollIntoView({
 
-    border-radius: 20px;
+            behavior: "smooth"
 
-    padding: 32px 28px;
+        });
 
-    text-align: center;
+    }
 
-    box-shadow: var(--shadow);
-}
 
-.login-logo {
-    font-size: 40px;
+    setActiveNav(1);
 
-    margin-bottom: 8px;
-}
-
-.login-box h1 {
-    font-size: 22px;
-
-    font-weight: 700;
-
-    color: var(--text);
-
-    margin-bottom: 4px;
-}
-
-.login-box p {
-    color: var(--text-light);
-
-    font-size: 14px;
-
-    margin-bottom: 20px;
-}
-
-.login-box .form-group {
-    text-align: left;
-
-    margin-bottom: 14px;
-}
-
-.login-error {
-    color: var(--danger);
-
-    font-size: 13px;
-
-    margin: 4px 0 12px;
-
-    text-align: left;
-}
-
-.login-button {
-    width: 100%;
-
-    padding: 14px;
-
-    border: none;
-
-    border-radius: 12px;
-
-    background: var(--secondary);
-
-    color: white;
-
-    font-size: 15px;
-
-    font-weight: 600;
-
-    cursor: pointer;
-
-    margin-top: 6px;
-}
-
-.login-button:disabled {
-    opacity: 0.6;
-
-    cursor: not-allowed;
 }
 
 
-/* =====================================================
-   USER INFO / LOGOUT (HEADER)
-===================================================== */
+/* =========================================================
+   SUMMARY
+   ========================================================= */
 
-.user-info {
-    display: flex;
+function showSummary() {
 
-    align-items: center;
+    const dashboard =
+        document.querySelector(
+            ".dashboard"
+        );
 
-    gap: 10px;
 
-    font-size: 13px;
+    if (dashboard) {
 
-    color: rgba(255, 255, 255, 0.9);
+        dashboard.scrollIntoView({
+
+            behavior: "smooth"
+
+        });
+
+    }
+
+
+    setActiveNav(2);
+
 }
 
-.logout-button {
-    background: rgba(255, 255, 255, 0.15);
 
-    border: 1px solid rgba(255, 255, 255, 0.35);
+/* =========================================================
+   ACTIVE NAV
+   ========================================================= */
 
-    color: white;
+function setActiveNav(index) {
 
-    padding: 6px 12px;
+    const navItems =
+        document.querySelectorAll(
+            ".nav-item"
+        );
 
-    border-radius: 8px;
 
-    font-size: 12px;
+    navItems.forEach(item => {
 
-    cursor: pointer;
+        item.classList.remove(
+            "active"
+        );
+
+    });
+
+
+    if (navItems[index]) {
+
+        navItems[index].classList.add(
+            "active"
+        );
+
+    }
+
 }
+
+
+/* =========================================================
+   CLICK OUTSIDE CUSTOMER
+   ========================================================= */
+
+document.addEventListener(
+    "click",
+    function(event) {
+
+        if (
+            customerSearch &&
+            customerList &&
+            !customerSearch.contains(
+                event.target
+            ) &&
+            !customerList.contains(
+                event.target
+            )
+        ) {
+
+            customerList.classList.remove(
+                "show"
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   =========================================================
+   EXPORT EXCEL
+   =========================================================
+   ========================================================= */
+
+function exportExcel() {
+
+    /* CEK LIBRARY */
+
+    if (
+        typeof XLSX === "undefined"
+    ) {
+
+        alert(
+            "Excel belum bisa digunakan.\n\n" +
+            "Pastikan library XLSX sudah dipasang " +
+            "di index.html sebelum app.js."
+        );
+
+        return;
+
+    }
+
+
+    /* DATA */
+
+    const data =
+        getStockData();
+
+
+    if (data.length === 0) {
+
+        alert(
+            "Belum ada data monitoring yang dapat diexport."
+        );
+
+        return;
+
+    }
+
+
+    /* WORKBOOK */
+
+    const workbook =
+        XLSX.utils.book_new();
+
+
+    /* =====================================================
+       SHEET 1
+       DETAIL MONITORING
+    ===================================================== */
+
+    const detailRows = [
+
+        [
+
+            "No",
+
+            "Tanggal",
+
+            "Kode Outlet",
+
+            "Nama Customer",
+
+            "Alamat",
+
+            "Kota",
+
+            "Provinsi",
+
+            "Produk",
+
+            "Stock (Karton)",
+
+            "Minimum Stock",
+
+            "Status",
+
+            "Catatan"
+
+        ]
+
+    ];
+
+
+    data.forEach(
+        (item, index) => {
+
+            detailRows.push([
+
+                index + 1,
+
+                item.tanggal || "",
+
+                item.kode || "",
+
+                item.customer || "",
+
+                item.alamat || "",
+
+                item.kota || "",
+
+                item.provinsi || "",
+
+                item.produk || "",
+
+                Number(
+                    item.stock || 0
+                ),
+
+                Number(
+                    item.minimum || 0
+                ),
+
+                item.status || "",
+
+                item.catatan || ""
+
+            ]);
+
+        }
+    );
+
+
+    const wsDetail =
+        XLSX.utils.aoa_to_sheet(
+            detailRows
+        );
+
+
+    wsDetail["!cols"] = [
+
+        { wch: 6 },
+
+        { wch: 14 },
+
+        { wch: 18 },
+
+        { wch: 30 },
+
+        { wch: 45 },
+
+        { wch: 23 },
+
+        { wch: 20 },
+
+        { wch: 25 },
+
+        { wch: 18 },
+
+        { wch: 18 },
+
+        { wch: 20 },
+
+        { wch: 40 }
+
+    ];
+
+
+    wsDetail["!autofilter"] = {
+
+        ref: wsDetail["!ref"]
+
+    };
+
+
+    wsDetail["!freeze"] = {
+
+        xSplit: 0,
+
+        ySplit: 1
+
+    };
+
+
+    XLSX.utils.book_append_sheet(
+
+        workbook,
+
+        wsDetail,
+
+        "Detail Monitoring"
+
+    );
+
+
+    /* =====================================================
+       SUMMARY CUSTOMER
+    ===================================================== */
+
+    const customerMap = {};
+
+
+    data.forEach(item => {
+
+        const kode =
+            item.kode || "-";
+
+        const produk =
+            item.produk || "-";
+
+
+        const key =
+            `${kode}|||${produk}`;
+
+
+        if (!customerMap[key]) {
+
+            customerMap[key] = {
+
+                kode: kode,
+
+                customer:
+                    item.customer || "",
+
+                kota:
+                    item.kota || "",
+
+                produk:
+                    produk,
+
+                monitoring: 0,
+
+                tanggalTerakhir:
+                    "",
+
+                stockTerakhir:
+                    0,
+
+                minimum:
+                    0,
+
+                status:
+                    ""
+
+            };
+
+        }
+
+
+        customerMap[key].monitoring++;
+
+
+        const tanggalBaru =
+            item.tanggal || "";
+
+
+        const tanggalLama =
+            customerMap[key]
+                .tanggalTerakhir;
+
+
+        if (
+            !tanggalLama ||
+            tanggalBaru >= tanggalLama
+        ) {
+
+            customerMap[key]
+                .tanggalTerakhir =
+                tanggalBaru;
+
+
+            customerMap[key]
+                .stockTerakhir =
+                Number(
+                    item.stock || 0
+                );
+
+
+            customerMap[key]
+                .minimum =
+                Number(
+                    item.minimum || 0
+                );
+
+
+            customerMap[key]
+                .status =
+                item.status || "";
+
+        }
+
+    });
+
+
+    const customerRows = [
+
+        [
+
+            "No",
+
+            "Kode Outlet",
+
+            "Nama Customer",
+
+            "Kota",
+
+            "Produk",
+
+            "Jumlah Monitoring",
+
+            "Tanggal Monitoring Terakhir",
+
+            "Stock Terakhir",
+
+            "Minimum Stock",
+
+            "Status"
+
+        ]
+
+    ];
+
+
+    Object.values(
+        customerMap
+    )
+    .sort(
+        (a, b) =>
+            a.customer.localeCompare(
+                b.customer
+            )
+    )
+    .forEach(
+        (item, index) => {
+
+            customerRows.push([
+
+                index + 1,
+
+                item.kode,
+
+                item.customer,
+
+                item.kota,
+
+                item.produk,
+
+                item.monitoring,
+
+                item.tanggalTerakhir,
+
+                item.stockTerakhir,
+
+                item.minimum,
+
+                item.status
+
+            ]);
+
+        }
+    );
+
+
+    const wsCustomer =
+        XLSX.utils.aoa_to_sheet(
+            customerRows
+        );
+
+
+    wsCustomer["!cols"] = [
+
+        { wch: 6 },
+
+        { wch: 18 },
+
+        { wch: 30 },
+
+        { wch: 23 },
+
+        { wch: 25 },
+
+        { wch: 20 },
+
+        { wch: 28 },
+
+        { wch: 18 },
+
+        { wch: 18 },
+
+        { wch: 20 }
+
+    ];
+
+
+    wsCustomer["!autofilter"] = {
+
+        ref: wsCustomer["!ref"]
+
+    };
+
+
+    wsCustomer["!freeze"] = {
+
+        xSplit: 0,
+
+        ySplit: 1
+
+    };
+
+
+    XLSX.utils.book_append_sheet(
+
+        workbook,
+
+        wsCustomer,
+
+        "Summary Customer"
+
+    );
+
+
+    /* =====================================================
+       SUMMARY PER KOTA
+    ===================================================== */
+
+    const kotaMap = {};
+
+
+    data.forEach(item => {
+
+        const kota =
+            item.kota ||
+            "Tidak Diketahui";
+
+
+        if (!kotaMap[kota]) {
+
+            kotaMap[kota] = {
+
+                customers: new Set(),
+
+                monitoring: 0,
+
+                aman: 0,
+
+                menipis: 0,
+
+                kosong: 0
+
+            };
+
+        }
+
+
+        if (item.kode) {
+
+            kotaMap[kota]
+                .customers
+                .add(item.kode);
+
+        }
+
+
+        kotaMap[kota]
+            .monitoring++;
+
+
+        if (
+            item.status ===
+            "STOCK AMAN"
+        ) {
+
+            kotaMap[kota]
+                .aman++;
+
+        }
+
+
+        if (
+            item.status ===
+            "STOCK MENIPIS"
+        ) {
+
+            kotaMap[kota]
+                .menipis++;
+
+        }
+
+
+        if (
+            item.status ===
+            "STOCK KOSONG"
+        ) {
+
+            kotaMap[kota]
+                .kosong++;
+
+        }
+
+    });
+
+
+    const kotaRows = [
+
+        [
+
+            "No",
+
+            "Kota",
+
+            "Jumlah Customer",
+
+            "Total Monitoring",
+
+            "Stock Aman",
+
+            "Stock Menipis",
+
+            "Stock Kosong"
+
+        ]
+
+    ];
+
+
+    Object.entries(
+        kotaMap
+    )
+    .sort(
+        (a, b) =>
+            a[0].localeCompare(
+                b[0]
+            )
+    )
+    .forEach(
+        ([kota, item], index) => {
+
+            kotaRows.push([
+
+                index + 1,
+
+                kota,
+
+                item.customers.size,
+
+                item.monitoring,
+
+                item.aman,
+
+                item.menipis,
+
+                item.kosong
+
+            ]);
+
+        }
+    );
+
+
+    const wsKota =
+        XLSX.utils.aoa_to_sheet(
+            kotaRows
+        );
+
+
+    wsKota["!cols"] = [
+
+        { wch: 6 },
+
+        { wch: 28 },
+
+        { wch: 20 },
+
+        { wch: 20 },
+
+        { wch: 18 },
+
+        { wch: 20 },
+
+        { wch: 18 }
+
+    ];
+
+
+    wsKota["!autofilter"] = {
+
+        ref: wsKota["!ref"]
+
+    };
+
+
+    wsKota["!freeze"] = {
+
+        xSplit: 0,
+
+        ySplit: 1
+
+    };
+
+
+    XLSX.utils.book_append_sheet(
+
+        workbook,
+
+        wsKota,
+
+        "Summary per Kota"
+
+    );
+
+
+    /* =====================================================
+       FORMAT EXCEL
+    ===================================================== */
+
+    formatExcelSheet(
+        wsDetail,
+        "detail"
+    );
+
+
+    formatExcelSheet(
+        wsCustomer,
+        "customer"
+    );
+
+
+    formatExcelSheet(
+        wsKota,
+        "kota"
+    );
+
+
+    /* =====================================================
+       NAMA FILE
+    ===================================================== */
+
+    const today =
+        new Date();
+
+
+    const tahun =
+        today.getFullYear();
+
+
+    const bulan =
+        String(
+            today.getMonth() + 1
+        ).padStart(2, "0");
+
+
+    const tanggal =
+        String(
+            today.getDate()
+        ).padStart(2, "0");
+
+
+    const filename =
+        `Monitoring_Stock_Customer_${tahun}-${bulan}-${tanggal}.xlsx`;
+
+
+    /* =====================================================
+       DOWNLOAD
+    ===================================================== */
+
+    XLSX.writeFile(
+        workbook,
+        filename
+    );
+
+
+    alert(
+        "Rekap Excel berhasil dibuat.\n\n" +
+        "File berisi:\n" +
+        "1. Detail Monitoring\n" +
+        "2. Summary Customer\n" +
+        "3. Summary per Kota"
+    );
+
+}
+
+
+/* =========================================================
+   FORMAT SHEET EXCEL
+   ========================================================= */
+
+function formatExcelSheet(
+    worksheet,
+    type
+) {
+
+    if (
+        !worksheet ||
+        !worksheet["!ref"]
+    ) {
+
+        return;
+
+    }
+
+
+    const range =
+        XLSX.utils.decode_range(
+            worksheet["!ref"]
+        );
+
+
+    /* =====================================================
+       HEADER
+    ===================================================== */
+
+    for (
+        let col = range.s.c;
+        col <= range.e.c;
+        col++
+    ) {
+
+        const cell =
+            worksheet[
+                XLSX.utils.encode_cell({
+                    r: 0,
+                    c: col
+                })
+            ];
+
+
+        if (!cell) continue;
+
+
+        cell.s = {
+
+            font: {
+
+                bold: true,
+
+                color: {
+                    rgb: "FFFFFF"
+                }
+
+            },
+
+            fill: {
+
+                fgColor: {
+                    rgb: "1F4E78"
+                }
+
+            },
+
+            alignment: {
+
+                horizontal:
+                    "center",
+
+                vertical:
+                    "center",
+
+                wrapText:
+                    true
+
+            },
+
+            border: {
+
+                top: {
+                    style: "thin",
+                    color: {
+                        rgb: "D9E2F3"
+                    }
+                },
+
+                bottom: {
+                    style: "thin",
+                    color: {
+                        rgb: "D9E2F3"
+                    }
+                },
+
+                left: {
+                    style: "thin",
+                    color: {
+                        rgb: "D9E2F3"
+                    }
+                },
+
+                right: {
+                    style: "thin",
+                    color: {
+                        rgb: "D9E2F3"
+                    }
+                }
+
+            }
+
+        };
+
+    }
+
+
+    /* =====================================================
+       DATA
+    ===================================================== */
+
+    for (
+        let row = 1;
+        row <= range.e.r;
+        row++
+    ) {
+
+        for (
+            let col = range.s.c;
+            col <= range.e.c;
+            col++
+        ) {
+
+            const cell =
+                worksheet[
+                    XLSX.utils.encode_cell({
+                        r: row,
+                        c: col
+                    })
+                ];
+
+
+            if (!cell) continue;
+
+
+            cell.s = {
+
+                alignment: {
+
+                    vertical:
+                        "center",
+
+                    wrapText:
+                        true
+
+                },
+
+                border: {
+
+                    top: {
+                        style: "thin",
+                        color: {
+                            rgb: "E7E6E6"
+                        }
+                    },
+
+                    bottom: {
+                        style: "thin",
+                        color: {
+                            rgb: "E7E6E6"
+                        }
+                    },
+
+                    left: {
+                        style: "thin",
+                        color: {
+                            rgb: "E7E6E6"
+                        }
+                    },
+
+                    right: {
+                        style: "thin",
+                        color: {
+                            rgb: "E7E6E6"
+                        }
+                    }
+
+                }
+
+            };
+
+        }
+
+    }
+
+
+    /* =====================================================
+       STATUS COLOR
+    ===================================================== */
+
+    for (
+        let row = 1;
+        row <= range.e.r;
+        row++
+    ) {
+
+        for (
+            let col = range.s.c;
+            col <= range.e.c;
+            col++
+        ) {
+
+            const cell =
+                worksheet[
+                    XLSX.utils.encode_cell({
+                        r: row,
+                        c: col
+                    })
+                ];
+
+
+            if (!cell) continue;
+
+
+            const value =
+                String(
+                    cell.v || ""
+                )
+                .trim()
+                .toUpperCase();
+
+
+            /* STOCK AMAN */
+
+            if (
+                value ===
+                "STOCK AMAN"
+            ) {
+
+                cell.s = {
+
+                    fill: {
+
+                        fgColor: {
+                            rgb: "C6EFCE"
+                        }
+
+                    },
+
+                    font: {
+
+                        bold: true,
+
+                        color: {
+                            rgb: "006100"
+                        }
+
+                    },
+
+                    alignment: {
+
+                        horizontal:
+                            "center",
+
+                        vertical:
+                            "center"
+
+                    }
+
+                };
+
+            }
+
+
+            /* STOCK MENIPIS */
+
+            if (
+                value ===
+                "STOCK MENIPIS"
+            ) {
+
+                cell.s = {
+
+                    fill: {
+
+                        fgColor: {
+                            rgb: "FFEB9C"
+                        }
+
+                    },
+
+                    font: {
+
+                        bold: true,
+
+                        color: {
+                            rgb: "9C6500"
+                        }
+
+                    },
+
+                    alignment: {
+
+                        horizontal:
+                            "center",
+
+                        vertical:
+                            "center"
+
+                    }
+
+                };
+
+            }
+
+
+            /* STOCK KOSONG */
+
+            if (
+                value ===
+                "STOCK KOSONG"
+            ) {
+
+                cell.s = {
+
+                    fill: {
+
+                        fgColor: {
+                            rgb: "FFC7CE"
+                        }
+
+                    },
+
+                    font: {
+
+                        bold: true,
+
+                        color: {
+                            rgb: "9C0006"
+                        }
+
+                    },
+
+                    alignment: {
+
+                        horizontal:
+                            "center",
+
+                        vertical:
+                            "center"
+
+                    }
+
+                };
+
+            }
+
+        }
+
+    }
+
+
+    /* =====================================================
+       ROW HEIGHT
+    ===================================================== */
+
+    worksheet["!rows"] = [];
+
+    worksheet["!rows"][0] = {
+
+        hpt: 30
+
+    };
+
+
+    for (
+        let i = 1;
+        i <= range.e.r;
+        i++
+    ) {
+
+        worksheet["!rows"][i] = {
+
+            hpt: 24
+
+        };
+
+    }
+
+}
+
+
+/* =========================================================
+   HAPUS SEMUA DATA
+   ========================================================= */
+
+function clearAllData() {
+
+    const data =
+        getStockData();
+
+
+    if (data.length === 0) {
+
+        alert(
+            "Belum ada data monitoring."
+        );
+
+        return;
+
+    }
+
+
+    const confirmDelete =
+        confirm(
+            "PERINGATAN!\n\n" +
+            "Semua data monitoring akan dihapus " +
+            "dari perangkat ini.\n\n" +
+            "Apakah Anda yakin?"
+        );
+
+
+    if (!confirmDelete) {
+
+        return;
+
+    }
+
+
+    localStorage.removeItem(
+        STORAGE_KEY
+    );
+
+
+    loadHistory();
+
+    updateDashboard();
+
+
+    alert(
+        "Semua data monitoring berhasil dihapus."
+    );
+
+}
+
+
+/* =========================================================
+   INITIALIZATION
+   ========================================================= */
+
+function initializeApp() {
+
+    setToday();
+
+    loadHistory();
+
+    updateDashboard();
+
+    updateStockStatus();
+
+}
+
+
+/* =========================================================
+   DOM READY
+   ========================================================= */
+
+if (
+    document.readyState ===
+    "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        initializeApp
+    );
+
+} else {
+
+    initializeApp();
+
+}
+
+
+/* =========================================================
+   GLOBAL FUNCTION
+   Supaya bisa dipanggil dari HTML onclick=""
+   ========================================================= */
+
+window.saveStock =
+    saveStock;
+
+window.clearCustomer =
+    clearCustomer;
+
+window.exportExcel =
+    exportExcel;
+
+window.clearAllData =
+    clearAllData;
+
+window.showHome =
+    showHome;
+
+window.showHistory =
+    showHistory;
+
+window.showSummary =
+    showSummary;
+
+window.updateStockStatus =
+    updateStockStatus;
