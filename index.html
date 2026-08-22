@@ -765,7 +765,7 @@
                     </h2>
 
                     <p>
-                        Tambah Produk Baru & Customer Baru
+                        Tambah produk atau customer baru tanpa perlu ubah kode
                     </p>
 
                 </div>
@@ -1145,24 +1145,33 @@ function exportExcel() {
                         item.tanggal ||
                         "",
 
+                    "Kode Customer":
+                        item.Code ||
+                        item.customerCode ||
+                        item.Code ||
+                        "",
+
                     "Customer":
                         item.customerName ||
                         item.customer ||
                         item.name ||
                         "",
 
-                    "Kode Customer":
-                        item.customerCode ||
-                        item.code ||
-                        "",
-
                     "Alamat":
+                        item.alamat ||
                         item.address ||
                         item.customerAddress ||
                         "",
 
                     "Kota / Provinsi":
-                        item.city ||
+                        (
+                            (item.kota || item.city || "") +
+                            (
+                                (item.provinsi || item.customerProvinsi) ?
+                                (" / " + (item.provinsi || item.customerProvinsi)) :
+                                ""
+                            )
+                        ) ||
                         item.customerCity ||
                         "",
 
