@@ -147,13 +147,6 @@ const customers = [
         kota: "Ternate"
     },
     {
-        kode: "BU022",
-        nama: "Fafa Bakery",
-        alamat: "Tanah Tinggi jln baru",
-        provinsi: "Maluku Utara",
-        kota: "Ternate"
-    },
-    {
         kode: "BU2200",
         nama: "Hanisya Bakery",
         alamat: "Ngidi depan Kusuma Samudera, Ternate",
