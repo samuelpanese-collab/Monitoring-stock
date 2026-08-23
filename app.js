@@ -73,7 +73,16 @@ function getCustomers() {
         baseCustomers = customers;
     }
 
-    return baseCustomers.concat(customCustomers);
+    const allCustomers =
+        baseCustomers.concat(customCustomers);
+
+    const hiddenCodes =
+        (typeof hiddenCustomerCodes !== "undefined" ? hiddenCustomerCodes : [])
+            .map(function (h) { return h.kode; });
+
+    return allCustomers.filter(function (c) {
+        return hiddenCodes.indexOf(c.kode) === -1;
+    });
 }
 
 
@@ -743,6 +752,238 @@ function deleteCustomCustomer(id) {
         renderCustomCustomerList();
 
     }
+
+}
+
+
+/* =========================================================
+   NONAKTIFKAN CUSTOMER LAMA
+   =========================================================
+   Untuk customer bawaan (data.js) atau tambahan yang sudah
+   tidak aktif. Bukan dihapus permanen dari data.js, cuma
+   disembunyikan dari pencarian & dashboard. Bisa diaktifkan
+   lagi kapan saja.
+   ========================================================= */
+
+let hiddenCustomerCodes = [];
+
+
+function loadHiddenFromLocal() {
+
+    try {
+
+        hiddenCustomerCodes = JSON.parse(
+            localStorage.getItem("hiddenCustomerCodes") || "[]"
+        );
+
+    } catch (e) {
+
+        hiddenCustomerCodes = [];
+
+    }
+
+}
+
+
+function initHiddenCustomerSync() {
+
+    if (!firebaseReady || !db) return;
+
+    db.collection("hiddenCustomers")
+        .onSnapshot(function (snapshot) {
+
+            hiddenCustomerCodes = snapshot.docs.map(function (docSnap) {
+
+                const item = docSnap.data();
+                item.id = docSnap.id;
+                return item;
+
+            });
+
+            localStorage.setItem(
+                "hiddenCustomerCodes",
+                JSON.stringify(hiddenCustomerCodes)
+            );
+
+            renderHiddenCustomerList();
+
+        }, function (error) {
+
+            console.error(
+                "Sinkronisasi customer nonaktif gagal:",
+                error
+            );
+
+        });
+
+}
+
+
+function deactivateCustomerSearch() {
+
+    const input = el("deactivateCustomerSearchInput");
+    const resultBox = el("deactivateCustomerResult");
+
+    if (!input || !resultBox) return;
+
+    const keyword = input.value.toLowerCase().trim();
+
+    if (!keyword) {
+
+        resultBox.innerHTML = "";
+        return;
+
+    }
+
+    const activeCodes = hiddenCustomerCodes.map(function (h) {
+        return h.kode;
+    });
+
+    const results = getCustomers()
+        .filter(function (c) {
+
+            if (activeCodes.indexOf(c.kode) !== -1) return false;
+
+            const kode = String(c.kode || "").toLowerCase();
+            const nama = String(c.nama || "").toLowerCase();
+            const kota = String(c.kota || "").toLowerCase();
+
+            return (
+                kode.includes(keyword) ||
+                nama.includes(keyword) ||
+                kota.includes(keyword)
+            );
+
+        })
+        .slice(0, 15);
+
+    if (results.length === 0) {
+
+        resultBox.innerHTML =
+            '<p style="color:var(--text-light);font-size:13px;">Tidak ditemukan.</p>';
+
+        return;
+
+    }
+
+    resultBox.innerHTML = results.map(function (c) {
+
+        return `
+            <div class="manage-item">
+                <span><strong>${escapeHTML(c.nama)}</strong> — ${escapeHTML(c.kode)} (${escapeHTML(c.kota || "-")})</span>
+                <button type="button" onclick="deactivateCustomer('${c.kode}', '${escapeHTML(c.nama).replace(/'/g, "\\'")}')">Nonaktifkan</button>
+            </div>
+        `;
+
+    }).join("");
+
+}
+
+
+function deactivateCustomer(kode, nama) {
+
+    if (!confirm('Nonaktifkan customer "' + nama + '"?')) return;
+
+    const record = {
+        kode: kode,
+        nama: nama,
+        createdAt: new Date().toISOString()
+    };
+
+    if (firebaseReady && db) {
+
+        db.collection("hiddenCustomers")
+            .add(record)
+            .catch(function (error) {
+
+                console.error("Gagal menonaktifkan customer:", error);
+                alert("Gagal menonaktifkan customer.");
+
+            });
+
+    } else {
+
+        record.id = "local_" + Date.now();
+        hiddenCustomerCodes.push(record);
+
+        localStorage.setItem(
+            "hiddenCustomerCodes",
+            JSON.stringify(hiddenCustomerCodes)
+        );
+
+        renderHiddenCustomerList();
+
+    }
+
+    const input = el("deactivateCustomerSearchInput");
+    const resultBox = el("deactivateCustomerResult");
+
+    if (input) input.value = "";
+    if (resultBox) resultBox.innerHTML = "";
+
+    updateDashboard();
+
+}
+
+
+function activateCustomer(id) {
+
+    if (firebaseReady && db) {
+
+        db.collection("hiddenCustomers")
+            .doc(id)
+            .delete()
+            .catch(function (error) {
+
+                console.error("Gagal mengaktifkan customer:", error);
+
+            });
+
+    } else {
+
+        hiddenCustomerCodes = hiddenCustomerCodes.filter(function (h) {
+            return h.id !== id;
+        });
+
+        localStorage.setItem(
+            "hiddenCustomerCodes",
+            JSON.stringify(hiddenCustomerCodes)
+        );
+
+        renderHiddenCustomerList();
+
+    }
+
+    updateDashboard();
+
+}
+
+
+function renderHiddenCustomerList() {
+
+    const container = el("hiddenCustomerList");
+
+    if (!container) return;
+
+    if (hiddenCustomerCodes.length === 0) {
+
+        container.innerHTML =
+            '<p style="color:var(--text-light);font-size:13px;">Belum ada customer yang dinonaktifkan.</p>';
+
+        return;
+
+    }
+
+    container.innerHTML = hiddenCustomerCodes.map(function (h) {
+
+        return `
+            <div class="manage-item">
+                <span><strong>${escapeHTML(h.nama)}</strong> — ${escapeHTML(h.kode)}</span>
+                <button type="button" onclick="activateCustomer('${h.id}')" style="color:var(--secondary);">Aktifkan</button>
+            </div>
+        `;
+
+    }).join("");
 
 }
 
@@ -3173,6 +3414,7 @@ function clearAllData() {
 function initializeApp() {
 
     loadCustomDataFromLocal();
+    loadHiddenFromLocal();
 
     setToday();
 
@@ -3185,9 +3427,11 @@ function initializeApp() {
     renderProductSelect();
     renderCustomProductList();
     renderCustomCustomerList();
+    renderHiddenCustomerList();
 
     if (firebaseReady) {
         initCustomDataSync();
+        initHiddenCustomerSync();
     }
 
 }
@@ -3236,6 +3480,15 @@ window.addCustomCustomer =
 
 window.deleteCustomCustomer =
     deleteCustomCustomer;
+
+window.deactivateCustomerSearch =
+    deactivateCustomerSearch;
+
+window.deactivateCustomer =
+    deactivateCustomer;
+
+window.activateCustomer =
+    activateCustomer;
 
 window.showManage =
     showManage;
