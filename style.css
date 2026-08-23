@@ -1424,3 +1424,44 @@ input[type="number"]::-webkit-outer-spin-button {
 
     flex-shrink: 0;
 }
+
+
+/* =====================================================
+   MULTI ITEM STOCK (BEBERAPA SKU DALAM 1 CUSTOMER)
+===================================================== */
+
+.stock-item {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+
+    border-radius: 14px;
+
+    padding: 14px;
+
+    margin-bottom: 12px;
+
+    background: rgba(15, 23, 42, 0.02);
+}
+
+.stock-item-header {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 10px;
+
+    font-size: 14px;
+}
+
+.remove-item-btn {
+    background: none;
+
+    border: none;
+
+    color: var(--danger);
+
+    font-size: 13px;
+
+    cursor: pointer;
+}
