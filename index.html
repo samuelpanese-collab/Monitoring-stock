@@ -880,6 +880,96 @@
             ></div>
 
 
+            <!-- EDIT DATA CUSTOMER -->
+
+            <div class="form-group" style="margin-top:24px;">
+
+                <label>
+                    Edit Data Customer
+                </label>
+
+                <input
+                    type="text"
+                    id="editCustomerSearchInput"
+                    placeholder="Cari nama, kode atau kota customer..."
+                    oninput="editCustomerSearch()"
+                >
+
+            </div>
+
+            <div id="editCustomerResult" class="manage-list"></div>
+
+            <div id="editCustomerForm" class="hidden" style="margin-top:12px;">
+
+                <input type="hidden" id="editCustomerKode">
+
+                <div class="form-group">
+
+                    <input
+                        type="text"
+                        id="editCustomerNama"
+                        placeholder="Nama customer"
+                    >
+
+                </div>
+
+                <div class="form-group">
+
+                    <input
+                        type="text"
+                        id="editCustomerAlamat"
+                        placeholder="Alamat"
+                    >
+
+                </div>
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <input
+                            type="text"
+                            id="editCustomerKota"
+                            placeholder="Kota"
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <input
+                            type="text"
+                            id="editCustomerProvinsi"
+                            placeholder="Provinsi"
+                        >
+
+                    </div>
+
+                </div>
+
+                <div class="form-row">
+
+                    <button
+                        type="button"
+                        class="btn-primary"
+                        onclick="saveCustomerEdit()"
+                    >
+                        Simpan Perubahan
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn-secondary"
+                        onclick="cancelEditCustomer()"
+                    >
+                        Batal
+                    </button>
+
+                </div>
+
+            </div>
+
+
             <!-- NONAKTIFKAN CUSTOMER LAMA -->
 
             <div class="form-group" style="margin-top:24px;">
