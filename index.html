@@ -765,7 +765,7 @@
                     </h2>
 
                     <p>
-                        Tambah Produk & Customer Baru
+                        Tambah produk atau customer baru tanpa perlu ubah kode
                     </p>
 
                 </div>
@@ -878,6 +878,36 @@
                 class="manage-list"
                 style="margin-top:16px;"
             ></div>
+
+
+            <!-- NONAKTIFKAN CUSTOMER LAMA -->
+
+            <div class="form-group" style="margin-top:24px;">
+
+                <label>
+                    Nonaktifkan Customer Lama
+                </label>
+
+                <input
+                    type="text"
+                    id="deactivateCustomerSearchInput"
+                    placeholder="Cari nama, kode atau kota customer..."
+                    oninput="deactivateCustomerSearch()"
+                >
+
+            </div>
+
+            <div id="deactivateCustomerResult" class="manage-list"></div>
+
+            <div class="form-group" style="margin-top:16px;">
+
+                <label>
+                    Customer Nonaktif
+                </label>
+
+            </div>
+
+            <div id="hiddenCustomerList" class="manage-list"></div>
 
 
         </section>
@@ -1148,7 +1178,7 @@ function exportExcel() {
                     "Kode Customer":
                         item.kode ||
                         item.customerCode ||
-                        item.Code ||
+                        item.code ||
                         "",
 
                     "Customer Name":
