@@ -80,9 +80,24 @@ function getCustomers() {
         (typeof hiddenCustomerCodes !== "undefined" ? hiddenCustomerCodes : [])
             .map(function (h) { return h.kode; });
 
-    return allCustomers.filter(function (c) {
-        return hiddenCodes.indexOf(c.kode) === -1;
-    });
+    const edits =
+        typeof customerEdits !== "undefined" ? customerEdits : {};
+
+    return allCustomers
+        .filter(function (c) {
+            return hiddenCodes.indexOf(c.kode) === -1;
+        })
+        .map(function (c) {
+
+            const edit = edits[c.kode];
+
+            if (edit) {
+                return Object.assign({}, c, edit);
+            }
+
+            return c;
+
+        });
 }
 
 
@@ -984,6 +999,208 @@ function renderHiddenCustomerList() {
         `;
 
     }).join("");
+
+}
+
+
+/* =========================================================
+   EDIT DATA CUSTOMER (NAMA / ALAMAT / KOTA / PROVINSI)
+   =========================================================
+   Berlaku untuk customer bawaan (data.js) maupun tambahan.
+   Perubahan disimpan terpisah sebagai "override" per kode
+   customer, tanpa mengubah file data.js aslinya.
+   ========================================================= */
+
+let customerEdits = {};
+
+
+function loadCustomerEditsFromLocal() {
+
+    try {
+
+        customerEdits = JSON.parse(
+            localStorage.getItem("customerEdits") || "{}"
+        );
+
+    } catch (e) {
+
+        customerEdits = {};
+
+    }
+
+}
+
+
+function initCustomerEditsSync() {
+
+    if (!firebaseReady || !db) return;
+
+    db.collection("customerEdits")
+        .onSnapshot(function (snapshot) {
+
+            const edits = {};
+
+            snapshot.forEach(function (docSnap) {
+                edits[docSnap.id] = docSnap.data();
+            });
+
+            customerEdits = edits;
+
+            localStorage.setItem(
+                "customerEdits",
+                JSON.stringify(customerEdits)
+            );
+
+        }, function (error) {
+
+            console.error(
+                "Sinkronisasi edit customer gagal:",
+                error
+            );
+
+        });
+
+}
+
+
+function editCustomerSearch() {
+
+    const input = el("editCustomerSearchInput");
+    const resultBox = el("editCustomerResult");
+
+    if (!input || !resultBox) return;
+
+    const keyword = input.value.toLowerCase().trim();
+
+    if (!keyword) {
+
+        resultBox.innerHTML = "";
+        return;
+
+    }
+
+    const results = getCustomers()
+        .filter(function (c) {
+
+            const kode = String(c.kode || "").toLowerCase();
+            const nama = String(c.nama || "").toLowerCase();
+            const kota = String(c.kota || "").toLowerCase();
+
+            return (
+                kode.includes(keyword) ||
+                nama.includes(keyword) ||
+                kota.includes(keyword)
+            );
+
+        })
+        .slice(0, 15);
+
+    if (results.length === 0) {
+
+        resultBox.innerHTML =
+            '<p style="color:var(--text-light);font-size:13px;">Tidak ditemukan.</p>';
+
+        return;
+
+    }
+
+    resultBox.innerHTML = results.map(function (c) {
+
+        return `
+            <div class="manage-item">
+                <span><strong>${escapeHTML(c.nama)}</strong> — ${escapeHTML(c.kode)}</span>
+                <button type="button" onclick="selectCustomerToEdit('${c.kode}')">Edit</button>
+            </div>
+        `;
+
+    }).join("");
+
+}
+
+
+function selectCustomerToEdit(kode) {
+
+    const customer = getCustomers().find(function (c) {
+        return c.kode === kode;
+    });
+
+    if (!customer) return;
+
+    const form = el("editCustomerForm");
+
+    if (form) form.classList.remove("hidden");
+
+    el("editCustomerKode").value = customer.kode;
+    el("editCustomerNama").value = customer.nama || "";
+    el("editCustomerAlamat").value = customer.alamat || "";
+    el("editCustomerKota").value = customer.kota || "";
+    el("editCustomerProvinsi").value = customer.provinsi || "";
+
+    if (form) {
+
+        form.scrollIntoView({
+            behavior: "smooth"
+        });
+
+    }
+
+}
+
+
+function saveCustomerEdit() {
+
+    const kode = el("editCustomerKode").value;
+
+    if (!kode) return;
+
+    const record = {
+        nama: el("editCustomerNama").value.trim(),
+        alamat: el("editCustomerAlamat").value.trim(),
+        kota: el("editCustomerKota").value.trim(),
+        provinsi: el("editCustomerProvinsi").value.trim()
+    };
+
+    if (firebaseReady && db) {
+
+        db.collection("customerEdits")
+            .doc(kode)
+            .set(record)
+            .catch(function (error) {
+
+                console.error("Gagal menyimpan perubahan customer:", error);
+                alert("Gagal menyimpan perubahan ke cloud.");
+
+            });
+
+    } else {
+
+        customerEdits[kode] = record;
+
+        localStorage.setItem(
+            "customerEdits",
+            JSON.stringify(customerEdits)
+        );
+
+    }
+
+    cancelEditCustomer();
+
+    updateDashboard();
+
+    alert("Perubahan customer disimpan.");
+
+}
+
+
+function cancelEditCustomer() {
+
+    const form = el("editCustomerForm");
+    const input = el("editCustomerSearchInput");
+    const resultBox = el("editCustomerResult");
+
+    if (form) form.classList.add("hidden");
+    if (input) input.value = "";
+    if (resultBox) resultBox.innerHTML = "";
 
 }
 
@@ -3415,6 +3632,7 @@ function initializeApp() {
 
     loadCustomDataFromLocal();
     loadHiddenFromLocal();
+    loadCustomerEditsFromLocal();
 
     setToday();
 
@@ -3432,6 +3650,7 @@ function initializeApp() {
     if (firebaseReady) {
         initCustomDataSync();
         initHiddenCustomerSync();
+        initCustomerEditsSync();
     }
 
 }
@@ -3489,6 +3708,18 @@ window.deactivateCustomer =
 
 window.activateCustomer =
     activateCustomer;
+
+window.editCustomerSearch =
+    editCustomerSearch;
+
+window.selectCustomerToEdit =
+    selectCustomerToEdit;
+
+window.saveCustomerEdit =
+    saveCustomerEdit;
+
+window.cancelEditCustomer =
+    cancelEditCustomer;
 
 window.showManage =
     showManage;
