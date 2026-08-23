@@ -48,10 +48,6 @@ const selectedCustomerCode = el("selectedCustomerCode");
 const selectedCustomerAddress = el("selectedCustomerAddress");
 const selectedCustomerCity = el("selectedCustomerCity");
 
-const product = el("product");
-const stock = el("stock");
-const stockMinimum = el("stockMinimum");
-const stockStatus = el("stockStatus");
 const note = el("note");
 const visitDate = el("visitDate");
 
@@ -506,31 +502,116 @@ function initCustomDataSync() {
 
 function renderProductSelect() {
 
-    const select = el("product");
+    const selects = document.querySelectorAll(".item-product");
 
-    if (!select) return;
+    if (!selects.length) return;
 
-    const currentValue = select.value;
+    selects.forEach(function (select) {
 
-    select.querySelectorAll('option[data-custom="1"]').forEach(
-        function (opt) {
-            opt.remove();
-        }
-    );
+        const currentValue = select.value;
 
-    customProducts.forEach(function (p) {
+        select.querySelectorAll('option[data-custom="1"]').forEach(
+            function (opt) {
+                opt.remove();
+            }
+        );
 
-        const opt = document.createElement("option");
+        customProducts.forEach(function (p) {
 
-        opt.value = p.name;
-        opt.textContent = p.name;
-        opt.setAttribute("data-custom", "1");
+            const opt = document.createElement("option");
 
-        select.appendChild(opt);
+            opt.value = p.name;
+            opt.textContent = p.name;
+            opt.setAttribute("data-custom", "1");
+
+            select.appendChild(opt);
+
+        });
+
+        select.value = currentValue;
 
     });
 
-    select.value = currentValue;
+}
+
+
+function renumberStockItems() {
+
+    const container = el("stockItemsContainer");
+
+    if (!container) return;
+
+    const rows = container.querySelectorAll(".stock-item");
+
+    rows.forEach(function (row, index) {
+
+        const numberEl = row.querySelector(".item-number");
+
+        if (numberEl) numberEl.textContent = index + 1;
+
+        const removeBtn = row.querySelector(".remove-item-btn");
+
+        if (removeBtn) {
+
+            if (rows.length > 1) {
+                removeBtn.classList.remove("hidden");
+            } else {
+                removeBtn.classList.add("hidden");
+            }
+
+        }
+
+    });
+
+}
+
+
+function addStockItemRow() {
+
+    const container = el("stockItemsContainer");
+
+    if (!container) return;
+
+    const firstRow = container.querySelector(".stock-item");
+
+    if (!firstRow) return;
+
+    const newRow = firstRow.cloneNode(true);
+
+    newRow.querySelectorAll("select.item-product").forEach(
+        function (s) { s.value = ""; }
+    );
+
+    newRow.querySelectorAll("input.item-stock").forEach(
+        function (i) { i.value = ""; }
+    );
+
+    newRow.querySelectorAll("input.item-minimum").forEach(
+        function (i) { i.value = "5"; }
+    );
+
+    container.appendChild(newRow);
+
+    renumberStockItems();
+
+}
+
+
+function removeStockItemRow(button) {
+
+    const row = button.closest(".stock-item");
+
+    if (!row) return;
+
+    const container = el("stockItemsContainer");
+
+    if (!container) return;
+
+    if (container.querySelectorAll(".stock-item").length <= 1) return;
+
+    row.remove();
+
+    renumberStockItems();
 
 }
 
@@ -1534,186 +1615,6 @@ function getStockStatus(
 
 
 /* =========================================================
-   UPDATE STATUS STOCK
-   ========================================================= */
-
-function updateStockStatus() {
-
-    if (!stockStatus) return;
-
-
-    const stockValue =
-        Number(
-            stock ? stock.value : 0
-        );
-
-
-    const minimumValue =
-        Number(
-            stockMinimum ?
-            stockMinimum.value :
-            0
-        );
-
-
-    stockStatus.className =
-        "stock-status";
-
-
-    if (
-        !stock ||
-        stock.value === ""
-    ) {
-
-        stockStatus.innerHTML = `
-
-            <div class="status-icon">
-                📦
-            </div>
-
-            <div>
-
-                <small>
-                    Status Stock
-                </small>
-
-                <strong>
-                    Belum Diisi
-                </strong>
-
-            </div>
-
-        `;
-
-        return;
-
-    }
-
-
-    const status =
-        getStockStatus(
-            stockValue,
-            minimumValue
-        );
-
-
-    if (status === "STOCK KOSONG") {
-
-        stockStatus.classList.add(
-            "status-danger"
-        );
-
-
-        stockStatus.innerHTML = `
-
-            <div class="status-icon">
-                🔴
-            </div>
-
-            <div>
-
-                <small>
-                    Status Stock
-                </small>
-
-                <strong>
-                    STOCK KOSONG
-                </strong>
-
-            </div>
-
-        `;
-
-        return;
-
-    }
-
-
-    if (status === "STOCK MENIPIS") {
-
-        stockStatus.classList.add(
-            "status-warning"
-        );
-
-
-        stockStatus.innerHTML = `
-
-            <div class="status-icon">
-                🟡
-            </div>
-
-            <div>
-
-                <small>
-                    Status Stock
-                </small>
-
-                <strong>
-                    STOCK MENIPIS
-                </strong>
-
-            </div>
-
-        `;
-
-        return;
-
-    }
-
-
-    stockStatus.classList.add(
-        "status-safe"
-    );
-
-
-    stockStatus.innerHTML = `
-
-        <div class="status-icon">
-            🟢
-        </div>
-
-        <div>
-
-            <small>
-                Status Stock
-            </small>
-
-            <strong>
-                STOCK AMAN
-            </strong>
-
-        </div>
-
-    `;
-
-}
-
-
-/* =========================================================
-   EVENT STOCK
-   ========================================================= */
-
-if (stock) {
-
-    stock.addEventListener(
-        "input",
-        updateStockStatus
-    );
-
-}
-
-
-if (stockMinimum) {
-
-    stockMinimum.addEventListener(
-        "input",
-        updateStockStatus
-    );
-
-}
-
-
-/* =========================================================
    SAVE STOCK
    ========================================================= */
 
@@ -1738,166 +1639,164 @@ function saveStock() {
     }
 
 
-    /* PRODUK */
+    /* KUMPULKAN SEMUA ITEM */
 
-    if (
-        !product ||
-        !product.value
-    ) {
+    const container = el("stockItemsContainer");
 
-        alert(
-            "Silakan pilih produk."
-        );
+    if (!container) return;
 
-        if (product) {
+    const rows = Array.from(
+        container.querySelectorAll(".stock-item")
+    );
 
-            product.focus();
+    const items = [];
 
-        }
+    for (let i = 0; i < rows.length; i++) {
 
-        return;
+        const row = rows[i];
 
-    }
+        const productSelect = row.querySelector(".item-product");
+        const stockInput = row.querySelector(".item-stock");
+        const minimumInput = row.querySelector(".item-minimum");
 
+        if (!productSelect || !productSelect.value) {
 
-    /* STOCK */
+            alert(
+                "Item " + (i + 1) + ": silakan pilih produk."
+            );
 
-    if (
-        !stock ||
-        stock.value === ""
-    ) {
+            if (productSelect) productSelect.focus();
 
-        alert(
-            "Silakan isi jumlah stock."
-        );
-
-        if (stock) {
-
-            stock.focus();
+            return;
 
         }
 
-        return;
+        if (!stockInput || stockInput.value === "") {
+
+            alert(
+                "Item " + (i + 1) + ": silakan isi jumlah stock."
+            );
+
+            if (stockInput) stockInput.focus();
+
+            return;
+
+        }
+
+        const stockValue = Number(stockInput.value);
+
+        const minimumValue = Number(
+            minimumInput ? minimumInput.value : 0
+        );
+
+        if (stockValue < 0) {
+
+            alert(
+                "Item " + (i + 1) + ": jumlah stock tidak boleh negatif."
+            );
+
+            stockInput.focus();
+
+            return;
+
+        }
+
+        items.push({
+            produk: productSelect.value,
+            stock: stockValue,
+            minimum: minimumValue,
+            status: getStockStatus(stockValue, minimumValue)
+        });
 
     }
 
 
-    const stockValue =
-        Number(stock.value);
+    /* SIMPAN SATU RECORD PER ITEM */
 
+    const tanggal = visitDate ? visitDate.value : "";
+    const catatan = note ? note.value.trim() : "";
 
-    const minimumValue =
-        Number(
-            stockMinimum ?
-            stockMinimum.value :
-            0
-        );
+    items.forEach(function (item, index) {
 
+        const record = {
 
-    if (stockValue < 0) {
+            id:
+                Date.now() + index,
 
-        alert(
-            "Jumlah stock tidak boleh negatif."
-        );
+            tanggal:
+                tanggal,
 
-        stock.focus();
+            kode:
+                selectedCustomer.kode || "",
 
-        return;
+            customer:
+                selectedCustomer.nama || "",
 
-    }
+            alamat:
+                selectedCustomer.alamat || "",
 
+            kota:
+                selectedCustomer.kota || "",
 
-    const status =
-        getStockStatus(
-            stockValue,
-            minimumValue
-        );
+            provinsi:
+                selectedCustomer.provinsi || "",
 
+            produk:
+                item.produk,
 
-    /* DATA */
+            stock:
+                item.stock,
 
-    const record = {
+            minimum:
+                item.minimum,
 
-        id:
-            Date.now(),
+            status:
+                item.status,
 
-        tanggal:
-            visitDate ?
-            visitDate.value :
-            "",
+            catatan:
+                catatan
 
-        kode:
-            selectedCustomer.kode || "",
+        };
 
-        customer:
-            selectedCustomer.nama || "",
+        if (firebaseReady && db) {
 
-        alamat:
-            selectedCustomer.alamat || "",
+            record.createdAt =
+                new Date().toISOString();
 
-        kota:
-            selectedCustomer.kota || "",
+            db.collection("monitoring")
+                .add(record)
+                .catch(function (error) {
 
-        provinsi:
-            selectedCustomer.provinsi || "",
+                    console.error(
+                        "Gagal menyimpan ke cloud:",
+                        error
+                    );
 
-        produk:
-            product.value,
+                    alert(
+                        "Gagal mengirim data ke cloud.\n" +
+                        "Periksa koneksi internet Anda, atau data " +
+                        "akan otomatis terkirim saat online kembali."
+                    );
 
-        stock:
-            stockValue,
+                });
 
-        minimum:
-            minimumValue,
+        } else {
 
-        status:
-            status,
+            const data =
+                getStockData();
 
-        catatan:
-            note ?
-            note.value.trim() :
-            ""
+            data.unshift(record);
 
-    };
+            setStockData(data);
 
+        }
 
-    /* SIMPAN */
-
-    if (firebaseReady && db) {
-
-        record.createdAt =
-            new Date().toISOString();
-
-        db.collection("monitoring")
-            .add(record)
-            .catch(function (error) {
-
-                console.error(
-                    "Gagal menyimpan ke cloud:",
-                    error
-                );
-
-                alert(
-                    "Gagal mengirim data ke cloud.\n" +
-                    "Periksa koneksi internet Anda, atau data " +
-                    "akan otomatis terkirim saat online kembali."
-                );
-
-            });
-
-    } else {
-
-        const data =
-            getStockData();
-
-        data.unshift(record);
-
-        setStockData(data);
-
-    }
+    });
 
 
     alert(
+        items.length > 1 ?
+        items.length + " item monitoring stock berhasil disimpan." :
         "Monitoring stock berhasil disimpan."
     );
 
@@ -1938,26 +1837,33 @@ function resetForm() {
     }
 
 
-    if (product) {
+    const container = el("stockItemsContainer");
 
-        product.value =
-            "";
+    if (container) {
 
-    }
+        const rows = container.querySelectorAll(".stock-item");
 
+        rows.forEach(function (row, index) {
 
-    if (stock) {
+            if (index > 0) row.remove();
 
-        stock.value =
-            "";
+        });
 
-    }
+        const firstRow = container.querySelector(".stock-item");
 
+        if (firstRow) {
 
-    if (stockMinimum) {
+            const productSelect = firstRow.querySelector(".item-product");
+            const stockInput = firstRow.querySelector(".item-stock");
+            const minimumInput = firstRow.querySelector(".item-minimum");
 
-        stockMinimum.value =
-            "5";
+            if (productSelect) productSelect.value = "";
+            if (stockInput) stockInput.value = "";
+            if (minimumInput) minimumInput.value = "5";
+
+        }
+
+        renumberStockItems();
 
     }
 
@@ -1971,8 +1877,6 @@ function resetForm() {
 
 
     setToday();
-
-    updateStockStatus();
 
 }
 
@@ -3640,8 +3544,6 @@ function initializeApp() {
 
     updateDashboard();
 
-    updateStockStatus();
-
     renderProductSelect();
     renderCustomProductList();
     renderCustomCustomerList();
@@ -3745,5 +3647,8 @@ window.showHistory =
 window.showSummary =
     showSummary;
 
-window.updateStockStatus =
-    updateStockStatus;
+window.addStockItemRow =
+    addStockItemRow;
+
+window.removeStockItemRow =
+    removeStockItemRow;
