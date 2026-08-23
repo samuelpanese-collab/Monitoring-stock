@@ -420,141 +420,166 @@
 
 
 
-            <!-- PRODUK -->
+            <!-- PRODUK & STOCK (BISA LEBIH DARI 1 ITEM) -->
 
             <div class="form-group">
 
                 <label>
-                    Produk
+                    Produk & Stock
                 </label>
 
-                <select id="product">
-
-                    <option value="">
-                        Pilih Produk
-                    </option>
-
-                    <option value="Mother Choice 15kg">
-                        Mother Choice 15kg
-                    </option>
-
-                    <option value="Mother Choice Purpose 4,5kg">
-                        Mother Choice Purpose 4,5kg
-                    </option>
-
-                    <option value="Mother Choice Butter Blend 200g">
-                        Mother Choice Butter Blend 200g
-                    </option>
-
-                    <option value="Gold Bullion Grand Butter 15kg">
-                        Gold Bullion Grand Butter 15kg
-                    </option>
-
-                    <option value="Gold Bullion Merrywhip 16kg">
-                        Gold Bullion Merrywhip 16kg
-                    </option>
-
-                    <option value="Gold Bullion Frymasta 15kg">
-                        Gold Bullion Frymasta 15kg
-                    </option>
-
-                    <option value="Gold Bullion Bread-O 15kg">
-                        Gold Bullion Bread-O 15kg
-                    </option>
-
-                    <option value="Gold Bullion Medal 15kg">
-                        Gold Bullion Medal 15kg
-                    </option>
-
-                    <option value="Gold Bullion BOS Star 15kg">
-                        Gold Bullion BOS Star 15kg
-                    </option>
-
-                    <option value="Gold Bullion BOS 15kg">
-                        Gold Bullion BOS 15kg
-                    </option>
-
-                    <option value="Gold Bullion Flake Pastry 15kg">
-                        Gold Bullion Flake Pastry 15kg
-                    </option>
-
-                    <option value="Cita Fry 15kg">
-                        Cita Fry 15kg
-                    </option>
-
-                    <option value="Cita White Margarin 15kg">
-                        Cita White Margarin 15kg
-                    </option>
-
-                    <option value="Smazz Compound 15kg">
-                        Smazz Compound 15kg
-                    </option>
-
-                    <option value="Smazz Cream Margarine 15kg">
-                        Smazz Cream Margarine 15kg
-                    </option>
-
-                    <option value="Moremade saffire 17kg">
-                        Moremade saffire 17kg
-                    </option>
-
-                </select>
+                <p style="font-size:12px;color:var(--text-light);margin:-6px 0 10px;">
+                    Bisa tambah lebih dari 1 produk untuk customer yang sama
+                </p>
 
             </div>
 
 
-
-            <!-- STOCK -->
-
-            <div class="form-row">
+            <div id="stockItemsContainer">
 
 
-                <div class="form-group">
+                <div class="stock-item">
 
-                    <label>
-                        Stock Saat Ini
-                    </label>
+                    <div class="stock-item-header">
 
-                    <div class="input-unit">
+                        <strong>
+                            Item <span class="item-number">1</span>
+                        </strong>
 
-                        <input
-                            type="number"
-                            id="stock"
-                            min="0"
-                            step="1"
-                            placeholder="0"
+                        <button
+                            type="button"
+                            class="remove-item-btn hidden"
+                            onclick="removeStockItemRow(this)"
                         >
-
-                        <span>
-                            Karton
-                        </span>
+                            ✕ Hapus
+                        </button>
 
                     </div>
 
-                </div>
 
+                    <div class="form-group">
 
-                <div class="form-group">
+                        <select class="item-product">
 
-                    <label>
-                        Minimum Stock
-                    </label>
+                            <option value="">
+                                Pilih Produk
+                            </option>
 
-                    <div class="input-unit">
+                            <option value="Mother Choice 15kg">
+                                Mother Choice 15kg
+                            </option>
 
-                        <input
-                            type="number"
-                            id="stockMinimum"
-                            min="0"
-                            step="1"
-                            value="5"
-                        >
+                            <option value="Mother Choice Purpose 4,5kg">
+                                Mother Choice Purpose 4,5kg
+                            </option>
 
-                        <span>
-                            Karton
-                        </span>
+                            <option value="Mother Choice Butter Blend 200g">
+                                Mother Choice Butter Blend 200g
+                            </option>
+
+                            <option value="Gold Bullion Grand Butter 15kg">
+                                Gold Bullion Grand Butter 15kg
+                            </option>
+
+                            <option value="Gold Bullion Merrywhip 16kg">
+                                Gold Bullion Merrywhip 16kg
+                            </option>
+
+                            <option value="Gold Bullion Frymasta 15kg">
+                                Gold Bullion Frymasta 15kg
+                            </option>
+
+                            <option value="Gold Bullion Bread-O 15kg">
+                                Gold Bullion Bread-O 15kg
+                            </option>
+
+                            <option value="Gold Bullion Medal 15kg">
+                                Gold Bullion Medal 15kg
+                            </option>
+
+                            <option value="Gold Bullion BOS Star 15kg">
+                                Gold Bullion BOS Star 15kg
+                            </option>
+
+                            <option value="Gold Bullion BOS 15kg">
+                                Gold Bullion BOS 15kg
+                            </option>
+
+                            <option value="Gold Bullion Flake Pastry 15kg">
+                                Gold Bullion Flake Pastry 15kg
+                            </option>
+
+                            <option value="Cita Fry 15kg">
+                                Cita Fry 15kg
+                            </option>
+
+                            <option value="Cita White Margarin 15kg">
+                                Cita White Margarin 15kg
+                            </option>
+
+                            <option value="Smazz Compound 15kg">
+                                Smazz Compound 15kg
+                            </option>
+
+                            <option value="Smazz Cream Margarine 15kg">
+                                Smazz Cream Margarine 15kg
+                            </option>
+
+                            <option value="Moremade saffire 17kg">
+                                Moremade saffire 17kg
+                            </option>
+
+                        </select>
 
                     </div>
+
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+
+                            <div class="input-unit">
+
+                                <input
+                                    type="number"
+                                    class="item-stock"
+                                    min="0"
+                                    step="1"
+                                    placeholder="Stock saat ini"
+                                >
+
+                                <span>
+                                    Karton
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <div class="input-unit">
+
+                                <input
+                                    type="number"
+                                    class="item-minimum"
+                                    min="0"
+                                    step="1"
+                                    value="5"
+                                >
+
+                                <span>
+                                    Karton
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
 
                 </div>
 
@@ -562,31 +587,14 @@
             </div>
 
 
-
-            <!-- STATUS -->
-
-            <div
-                id="stockStatus"
-                class="stock-status"
+            <button
+                type="button"
+                class="btn-secondary"
+                style="width:100%;margin-top:10px;"
+                onclick="addStockItemRow()"
             >
-
-                <div class="status-icon">
-                    📦
-                </div>
-
-                <div>
-
-                    <small>
-                        Status Stock
-                    </small>
-
-                    <strong>
-                        Belum Diisi
-                    </strong>
-
-                </div>
-
-            </div>
+                + Tambah Produk Lain
+            </button>
 
 
 
