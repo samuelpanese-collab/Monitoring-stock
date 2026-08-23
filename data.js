@@ -1767,9 +1767,9 @@ const customers = [
     {
         kode: "YUSYXF",
         nama: "ALFARIZKY BULA",
-        alamat: "Maba, Halmahera Timur",
+        alamat: "Bula, Ternate",
         provinsi: "Maluku Utara",
-        kota: "Halmahera Timur"
+        kota: "Ternate"
     },
     {
         kode: "00001/01/YUSZED",
