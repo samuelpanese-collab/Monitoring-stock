@@ -783,11 +783,23 @@
 
             <!-- TAMBAH PRODUK -->
 
-            <div class="form-group">
+            <div class="manage-section-title">
 
                 <label>
-                    Tambah Produk Baru
+                    Daftar Produk Tambahan
                 </label>
+
+                <button
+                    type="button"
+                    class="fab-add-btn"
+                    onclick="toggleAddProductForm()"
+                >
+                    +
+                </button>
+
+            </div>
+
+            <div id="addProductForm" class="hidden" style="margin-bottom:12px;">
 
                 <div class="form-row">
 
@@ -803,7 +815,7 @@
                         style="width:auto;white-space:nowrap;padding:0 18px;"
                         onclick="addCustomProduct()"
                     >
-                        + Tambah
+                        Simpan
                     </button>
 
                 </div>
@@ -815,48 +827,30 @@
 
             <!-- TAMBAH CUSTOMER -->
 
-            <div class="form-group" style="margin-top:24px;">
+            <div class="manage-section-title" style="margin-top:24px;">
 
                 <label>
-                    Tambah Customer Baru
+                    Daftar Customer Tambahan
                 </label>
 
-                <input
-                    type="text"
-                    id="newCustomerKode"
-                    placeholder="Kode customer"
+                <button
+                    type="button"
+                    class="fab-add-btn"
+                    onclick="toggleAddCustomerForm()"
                 >
+                    +
+                </button>
 
             </div>
 
-            <div class="form-group">
-
-                <input
-                    type="text"
-                    id="newCustomerNama"
-                    placeholder="Nama customer"
-                >
-
-            </div>
-
-            <div class="form-group">
-
-                <input
-                    type="text"
-                    id="newCustomerAlamat"
-                    placeholder="Alamat"
-                >
-
-            </div>
-
-            <div class="form-row">
+            <div id="addCustomerForm" class="hidden">
 
                 <div class="form-group">
 
                     <input
                         type="text"
-                        id="newCustomerKota"
-                        placeholder="Kota"
+                        id="newCustomerKode"
+                        placeholder="Kode customer"
                     >
 
                 </div>
@@ -865,21 +859,55 @@
 
                     <input
                         type="text"
-                        id="newCustomerProvinsi"
-                        placeholder="Provinsi"
+                        id="newCustomerNama"
+                        placeholder="Nama customer"
                     >
 
                 </div>
 
-            </div>
+                <div class="form-group">
 
-            <button
-                type="button"
-                class="btn-primary"
-                onclick="addCustomCustomer()"
-            >
-                + Tambah Customer
-            </button>
+                    <input
+                        type="text"
+                        id="newCustomerAlamat"
+                        placeholder="Alamat"
+                    >
+
+                </div>
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <input
+                            type="text"
+                            id="newCustomerKota"
+                            placeholder="Kota"
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <input
+                            type="text"
+                            id="newCustomerProvinsi"
+                            placeholder="Provinsi"
+                        >
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-primary"
+                    onclick="addCustomCustomer()"
+                >
+                    Simpan Customer
+                </button>
+
+            </div>
 
             <div
                 id="customCustomerList"
