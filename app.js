@@ -1587,6 +1587,29 @@ function selectCustomer(customer) {
 
     }
 
+
+    const productStockSection =
+        el("productStockSection");
+
+    if (productStockSection) {
+
+        productStockSection.classList.remove(
+            "hidden"
+        );
+
+    }
+
+
+    const productStockCustomerName =
+        el("productStockCustomerName");
+
+    if (productStockCustomerName) {
+
+        productStockCustomerName.textContent =
+            customer.nama || "-";
+
+    }
+
 }
 
 
@@ -1613,6 +1636,18 @@ function clearCustomer() {
     if (selectedCustomerBox) {
 
         selectedCustomerBox.classList.add(
+            "hidden"
+        );
+
+    }
+
+
+    const productStockSection =
+        el("productStockSection");
+
+    if (productStockSection) {
+
+        productStockSection.classList.add(
             "hidden"
         );
 
@@ -1873,6 +1908,18 @@ function resetForm() {
     if (selectedCustomerBox) {
 
         selectedCustomerBox.classList.add(
+            "hidden"
+        );
+
+    }
+
+
+    const productStockSection =
+        el("productStockSection");
+
+    if (productStockSection) {
+
+        productStockSection.classList.add(
             "hidden"
         );
 
