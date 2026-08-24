@@ -877,6 +877,36 @@ body {
     justify-content: space-between;
 
     gap: 10px;
+
+    cursor: pointer;
+}
+
+.history-top-right {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    flex-shrink: 0;
+}
+
+.status-badge.compact {
+    padding: 5px 7px;
+
+    font-size: 13px;
+}
+
+.history-toggle-icon {
+    font-size: 12px;
+
+    color: var(--text-light);
+
+    transition: transform 0.2s ease;
+}
+
+.history-card.expanded .history-toggle-icon {
+    transform: rotate(180deg);
 }
 
 .history-customer {
@@ -916,14 +946,21 @@ body {
 }
 
 .history-details {
-    display: grid;
-
-    grid-template-columns:
-        repeat(2, 1fr);
-
-    gap: 8px;
+    display: none;
 
     margin-top: 12px;
+}
+
+.history-note {
+    display: none;
+}
+
+.history-card.expanded .history-details {
+    display: block;
+}
+
+.history-card.expanded .history-note {
+    display: block;
 }
 
 .history-box {
@@ -1464,4 +1501,112 @@ input[type="number"]::-webkit-outer-spin-button {
     font-size: 13px;
 
     cursor: pointer;
+}
+
+
+/* =====================================================
+   FAB "+" TOGGLE (TAMBAH PRODUK / CUSTOMER)
+===================================================== */
+
+.manage-section-title {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 10px;
+}
+
+.manage-section-title label {
+    margin: 0;
+}
+
+.fab-add-btn {
+    width: 32px;
+
+    height: 32px;
+
+    border-radius: 50%;
+
+    border: none;
+
+    background: var(--secondary);
+
+    color: white;
+
+    font-size: 18px;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+}
+
+
+/* =====================================================
+   TABEL RIWAYAT (DALAM 1 GROUP CUSTOMER + TANGGAL)
+===================================================== */
+
+.history-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 13px;
+}
+
+.history-table th {
+    text-align: left;
+
+    background: #f1f5f9;
+
+    color: var(--text-light);
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    padding: 8px 10px;
+
+    text-transform: uppercase;
+}
+
+.history-table th:first-child {
+    border-radius: 8px 0 0 8px;
+}
+
+.history-table th:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+.history-table td {
+    padding: 9px 10px;
+
+    border-bottom: 1px solid var(--border);
+
+    vertical-align: middle;
+}
+
+.history-table tr:last-child td {
+    border-bottom: none;
+}
+
+.history-table-qty {
+    white-space: nowrap;
+}
+
+.status-badge.compact-text {
+    font-size: 10px;
+
+    padding: 4px 7px;
+
+    white-space: nowrap;
 }
