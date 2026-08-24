@@ -421,21 +421,24 @@
 
 
             <!-- PRODUK & STOCK (BISA LEBIH DARI 1 ITEM) -->
+            <!-- Baru muncul setelah customer dipilih -->
 
-            <div class="form-group">
+            <div id="productStockSection" class="hidden">
 
-                <label>
-                    Produk & Stock
-                </label>
+                <div class="form-group">
 
-                <p style="font-size:12px;color:var(--text-light);margin:-6px 0 10px;">
-                    Bisa tambah lebih dari 1 produk untuk customer yang sama
-                </p>
+                    <label>
+                        Produk & Stock — <span id="productStockCustomerName">-</span>
+                    </label>
 
-            </div>
+                    <p style="font-size:12px;color:var(--text-light);margin:-6px 0 10px;">
+                        Bisa tambah lebih dari 1 produk untuk customer yang sama
+                    </p>
+
+                </div>
 
 
-            <div id="stockItemsContainer">
+                <div id="stockItemsContainer">
 
 
                 <div class="stock-item">
@@ -595,6 +598,9 @@
             >
                 + Tambah Produk Lain
             </button>
+
+
+            </div>
 
 
 
