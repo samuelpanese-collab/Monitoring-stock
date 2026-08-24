@@ -674,6 +674,42 @@ function renderCustomCustomerList() {
 }
 
 
+function toggleAddProductForm() {
+
+    const form = el("addProductForm");
+
+    if (!form) return;
+
+    form.classList.toggle("hidden");
+
+    if (!form.classList.contains("hidden")) {
+
+        const input = el("newProductName");
+        if (input) input.focus();
+
+    }
+
+}
+
+
+function toggleAddCustomerForm() {
+
+    const form = el("addCustomerForm");
+
+    if (!form) return;
+
+    form.classList.toggle("hidden");
+
+    if (!form.classList.contains("hidden")) {
+
+        const input = el("newCustomerKode");
+        if (input) input.focus();
+
+    }
+
+}
+
+
 function addCustomProduct() {
 
     const input = el("newProductName");
@@ -721,6 +757,9 @@ function addCustomProduct() {
     }
 
     input.value = "";
+
+    const form = el("addProductForm");
+    if (form) form.classList.add("hidden");
 
 }
 
@@ -815,6 +854,9 @@ function addCustomCustomer() {
     if (alamat) alamat.value = "";
     if (kota) kota.value = "";
     if (provinsi) provinsi.value = "";
+
+    const form = el("addCustomerForm");
+    if (form) form.classList.add("hidden");
 
 }
 
@@ -1921,50 +1963,101 @@ function loadHistory() {
     }
 
 
-    data.forEach(record => {
+    /* KELOMPOKKAN PER CUSTOMER + TANGGAL */
+
+    const groups = [];
+    const groupIndex = {};
+
+    data.forEach(function (record) {
+
+        const groupKey =
+            (record.kode || "") + "|" + (record.tanggal || "");
+
+        if (groupIndex[groupKey] === undefined) {
+
+            groupIndex[groupKey] = groups.length;
+
+            groups.push({
+                customer: record.customer,
+                kode: record.kode,
+                tanggal: record.tanggal,
+                items: []
+            });
+
+        }
+
+        groups[groupIndex[groupKey]].items.push(record);
+
+    });
+
+
+    function badgeInfo(status) {
+
+        if (status === "STOCK MENIPIS") {
+            return { className: "warning", icon: "🟡" };
+        }
+
+        if (status === "STOCK KOSONG") {
+            return { className: "danger", icon: "🔴" };
+        }
+
+        return { className: "safe", icon: "🟢" };
+
+    }
+
+
+    groups.forEach(function (group) {
 
         const card =
             document.createElement("div");
-
 
         card.className =
             "history-card";
 
 
-        let badgeClass =
+        /* status terburuk di antara item, untuk badge ringkasan */
+
+        let worst =
             "safe";
 
+        group.items.forEach(function (item) {
 
-        let badgeIcon =
-            "🟢";
+            const b = badgeInfo(item.status);
 
+            if (b.className === "danger") worst = "danger";
+            if (b.className === "warning" && worst !== "danger") worst = "warning";
 
-        if (
-            record.status ===
-            "STOCK MENIPIS"
-        ) {
+        });
 
-            badgeClass =
-                "warning";
-
-            badgeIcon =
-                "🟡";
-
-        }
+        const summaryBadge = {
+            safe: "🟢",
+            warning: "🟡",
+            danger: "🔴"
+        }[worst];
 
 
-        if (
-            record.status ===
-            "STOCK KOSONG"
-        ) {
+        const rowsHTML = group.items.map(function (item) {
 
-            badgeClass =
-                "danger";
+            const b = badgeInfo(item.status);
 
-            badgeIcon =
-                "🔴";
+            return `
+                <tr>
+                    <td>${escapeHTML(item.produk)}</td>
+                    <td class="history-table-qty">${item.stock} Karton</td>
+                    <td>
+                        <span class="status-badge ${b.className} compact-text">
+                            ${b.icon} ${escapeHTML(item.status)}
+                        </span>
+                    </td>
+                </tr>
+            `;
 
-        }
+        }).join("");
+
+
+        const catatanItem = group.items.find(function (item) {
+            return item.catatan;
+        });
 
 
         card.innerHTML = `
@@ -1974,18 +2067,28 @@ function loadHistory() {
                 <div class="history-customer">
 
                     <strong>
-                        ${escapeHTML(record.customer)}
+                        ${escapeHTML(group.customer)}
                     </strong>
 
                     <span>
-                        ${escapeHTML(record.kode)}
+                        ${escapeHTML(group.kode)} · ${group.items.length} item
                     </span>
 
                 </div>
 
-                <div class="history-date">
+                <div class="history-top-right">
 
-                    ${formatDate(record.tanggal)}
+                    <span class="status-badge ${worst} compact">
+                        ${summaryBadge}
+                    </span>
+
+                    <div class="history-date">
+                        ${formatDate(group.tanggal)}
+                    </div>
+
+                    <span class="history-toggle-icon">
+                        ▾
+                    </span>
 
                 </div>
 
@@ -1994,82 +2097,52 @@ function loadHistory() {
 
             <div class="history-details">
 
-                <div class="history-box">
+                <table class="history-table">
 
-                    <small>
-                        Produk
-                    </small>
+                    <thead>
+                        <tr>
+                            <th>Produk</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
 
-                    <strong>
-                        ${escapeHTML(record.produk)}
-                    </strong>
+                    <tbody>
+                        ${rowsHTML}
+                    </tbody>
 
-                </div>
+                </table>
 
-
-                <div class="history-box">
-
-                    <small>
-                        Stock
-                    </small>
-
-                    <strong>
-                        ${record.stock} Karton
-                    </strong>
-
-                </div>
-
-
-                <div class="history-box">
-
-                    <small>
-                        Minimum
-                    </small>
-
-                    <strong>
-                        ${record.minimum} Karton
-                    </strong>
-
-                </div>
-
-
-                <div class="history-box">
-
-                    <small>
-                        Status
-                    </small>
-
-                    <span class="status-badge ${badgeClass}">
-
-                        ${badgeIcon}
-
-                        ${escapeHTML(record.status)}
-
-                    </span>
-
-                </div>
+                ${
+                    catatanItem
+                    ?
+                    `
+                    <div class="history-note">
+                        📝 ${escapeHTML(catatanItem.catatan)}
+                    </div>
+                    `
+                    :
+                    ""
+                }
 
             </div>
 
-
-            ${
-                record.catatan
-                ?
-                `
-
-                <div class="history-note">
-
-                    📝
-                    ${escapeHTML(record.catatan)}
-
-                </div>
-
-                `
-                :
-                ""
-            }
-
         `;
+
+
+        const historyTop =
+            card.querySelector(".history-top");
+
+        if (historyTop) {
+
+            historyTop.addEventListener(
+                "click",
+                function () {
+                    card.classList.toggle("expanded");
+                }
+            );
+
+        }
 
 
         historyList.appendChild(card);
@@ -3592,6 +3665,12 @@ window.logoutUser =
 
 window.addCustomProduct =
     addCustomProduct;
+
+window.toggleAddProductForm =
+    toggleAddProductForm;
+
+window.toggleAddCustomerForm =
+    toggleAddCustomerForm;
 
 window.deleteCustomProduct =
     deleteCustomProduct;
