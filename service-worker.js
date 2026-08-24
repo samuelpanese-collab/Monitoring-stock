@@ -3,7 +3,7 @@
    SERVICE WORKER
 ===================================================== */
 
-const CACHE_NAME = "stock-monitoring-v10";
+const CACHE_NAME = "stock-monitoring-v11";
 
 
 const APP_FILES = [
